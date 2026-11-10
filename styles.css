@@ -1108,3 +1108,20 @@ body[data-mood="confused"] {
 .model-status.hidden {
   display: none;
 }
+
+.rules-fab-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.rules-modal-icon img {
+  width: 60%;
+  height: 60%;
+  display: block;
+}
+
+.rules-modal-icon {
+  display: grid;
+  place-items: center;
+}
