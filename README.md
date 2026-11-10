@@ -141,3 +141,5 @@ ChatKid can now run from a website, such as GitHub Pages. By default it uses **W
 ## Kids' Rulebook
 
 ChatKid follows 14 rules written by children in a KidsTeam session (2026-11-05). They are in `KIDS_RULEBOOK` in `app.js`.
+
+The **Our Rules** button (📜) opens a panel that shows children all their rules: DO and DON'T rules, which team wrote each one, who the kids said can change it, and the two rules ChatKid can't do yet.

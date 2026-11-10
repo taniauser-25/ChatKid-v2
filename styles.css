@@ -984,6 +984,111 @@ body[data-mood="confused"] {
   .flagged-fab-text {
     display: none;
   }
+
+}
+
+/* ===== Our Rules button + panel ===== */
+.rules-fab {
+  top: 180px;
+}
+
+@media (max-width: 760px) {
+  .rules-fab {
+    top: auto;
+    bottom: 80px;
+  }
+}
+
+.rules-modal-card {
+  text-align: left;
+  width: min(640px, 100%);
+}
+
+.rules-modal-icon {
+  background: var(--boise-orange-soft);
+}
+
+.rules-list {
+  margin-top: 16px;
+  max-height: min(58vh, 520px);
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rules-section-title {
+  margin: 10px 0 2px;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rules-section-title.do {
+  color: var(--boise-blue);
+}
+
+.rules-section-title.dont {
+  color: var(--boise-orange);
+}
+
+.rules-section-title.notyet {
+  color: var(--text-soft);
+}
+
+.rule-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 51, 160, 0.10);
+  border-left-width: 6px;
+  background: #ffffff;
+}
+
+.rule-item.do {
+  border-left-color: var(--boise-blue);
+}
+
+.rule-item.dont {
+  border-left-color: var(--boise-orange);
+}
+
+.rule-item.notyet {
+  border-left-color: #b8c0cf;
+  background: #f7f9fd;
+}
+
+.rule-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.rule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: #eef2fa;
+  color: var(--boise-blue-deep);
+}
+
+.rule-chip.owner {
+  background: var(--boise-orange-soft);
+  color: #8a2c06;
 }
 
 /* ===== Model loading status (added for online version) ===== */

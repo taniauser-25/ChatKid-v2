@@ -102,6 +102,58 @@ const KIDS_RULEBOOK = [
     whoCanChange: "Kids & parents together" },
 ];
 
+// Rules the kids wrote that ChatKid cannot follow yet (shown in the "Our Rules" panel only).
+const KIDS_RULES_NOT_YET = [
+  { type: "DO", team: 3, text: "Recognize live sign language", whoCanChange: "Kids & parents together",
+    why: "ChatKid would need a camera and a sign-language helper." },
+  { type: "DO", team: 3, text: "Recognize a child voice versus an adult voice", whoCanChange: "Parent",
+    why: "ChatKid would need to recognize voices." },
+];
+
+// ===== "Our Rules" panel =====
+function renderRulesList() {
+  const listEl = document.getElementById("rulesList");
+  if (!listEl) return;
+
+  const card = (rule, kind, extra = "") => `
+    <div class="rule-item ${kind}">
+      <div class="rule-text">${kind === "dont" ? "Don't: " : kind === "do" ? "Do: " : ""}${escapeHtml(rule.text)}</div>
+      <div class="rule-meta">
+        <span class="rule-chip">Team ${escapeHtml(rule.team)}</span>
+        <span class="rule-chip owner">Who can change it: ${escapeHtml(rule.whoCanChange)}</span>
+      </div>
+      ${extra}
+    </div>`;
+
+  const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
+  const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
+
+  listEl.innerHTML =
+    `<div class="rules-section-title do">✅ ChatKid SHOULD…</div>` +
+    dos.map((r) => card(r, "do")).join("") +
+    `<div class="rules-section-title dont">🚫 ChatKid should NOT…</div>` +
+    donts.map((r) => card(r, "dont")).join("") +
+    `<div class="rules-section-title notyet">🛠️ ChatKid can't do these yet</div>` +
+    KIDS_RULES_NOT_YET.map((r) =>
+      card(r, "notyet", `<div class="flagged-time">${escapeHtml(r.why)}</div>`)
+    ).join("");
+}
+
+function showRulesModal() {
+  const modal = document.getElementById("rulesModal");
+  if (!modal) return;
+  renderRulesList();
+  document.body.classList.add("modal-open");
+  modal.classList.remove("hidden");
+}
+
+function hideRulesModal() {
+  const modal = document.getElementById("rulesModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  if (!anyModalOpen()) document.body.classList.remove("modal-open");
+}
+
 function buildSystemPrompt() {
   const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
   const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
@@ -333,7 +385,9 @@ function updateFlaggedStatus(id, status) {
 function anyModalOpen() {
   const notifyOpen = notifyModalEl && !notifyModalEl.classList.contains("hidden");
   const flaggedOpen = flaggedModalEl && !flaggedModalEl.classList.contains("hidden");
-  return Boolean(notifyOpen || flaggedOpen);
+  const rulesModalEl = document.getElementById("rulesModal");
+  const rulesOpen = rulesModalEl && !rulesModalEl.classList.contains("hidden");
+  return Boolean(notifyOpen || flaggedOpen || rulesOpen);
 }
 
 function showFlaggedModal() {
@@ -759,6 +813,13 @@ if (clearFlaggedBtn) {
     clearFlaggedMessages();
   });
 }
+
+// ===== Our Rules button + panel =====
+document.getElementById("rulesFab")?.addEventListener("click", () => showRulesModal());
+document.getElementById("closeRulesBtn")?.addEventListener("click", () => {
+  hideRulesModal();
+  inputEl.focus();
+});
 
 // ===== Mood selector =====
 (function initMood() {

@@ -94,6 +94,31 @@
       <span id="flaggedCount" class="flagged-fab-count hidden">0</span>
     </button>
 
+    <button id="rulesFab" class="flagged-fab rules-fab" type="button" aria-label="Open our rules">
+      <span class="flagged-fab-icon" aria-hidden="true">📜</span>
+      <span class="flagged-fab-text">Our Rules</span>
+    </button>
+
+    <div
+      id="rulesModal"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rulesTitle"
+    >
+      <div class="modal-card rules-modal-card">
+        <div class="modal-icon rules-modal-icon">📜</div>
+        <h2 id="rulesTitle">Our Rules for ChatKid</h2>
+        <p class="flagged-subtitle">Kids in KidsTeam wrote these rules. ChatKid follows them.</p>
+
+        <div id="rulesList" class="rules-list"></div>
+
+        <div class="flagged-modal-actions">
+          <button id="closeRulesBtn" class="modal-close-btn" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
 
     <div
       id="notifyModal"
