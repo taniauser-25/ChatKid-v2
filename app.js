@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -29,8 +29,8 @@ const CONFIG = {
   proxy: {
     url: "", // e.g. "https://chatkid-proxy.your-name.workers.dev"
   },
-  maxHistoryMessages: 8,
-  maxTokens: 300,
+  maxHistoryMessages: 6,
+  maxTokens: 200,
   temperature: 0.6,
 };
 
@@ -179,7 +179,7 @@ function buildSystemPrompt() {
   return (
     `You are ${BOT_NAME}, a friendly chatbot for children aged 6 to 11. ` +
     `If someone asks who you are, say you are a chatbot named ${BOT_NAME}. ` +
-    `Keep answers short, kind, easy to understand, and safe for kids. Use simple words.\n\n` +
+    `Keep answers short (1 to 3 sentences, or a short list of up to 4 items when asked for ideas), kind, easy to understand, and safe for kids. Use simple words.\n\n` +
     `Children wrote a rulebook for you. These are THEIR rules. Follow every rule below.\n\n` +
     `Things you SHOULD do:\n${dos.map(line).join("\n")}\n\n` +
     `Things you should NOT do:\n${donts.map(line).join("\n")}\n\n` +
@@ -607,14 +607,39 @@ function loadWebLLM() {
   return webllmEnginePromise;
 }
 
-async function postToWebLLM(messages) {
+async function postToWebLLM(messages, onToken) {
   const engine = await loadWebLLM();
-  const reply = await engine.chat.completions.create({
+  // Stream the answer so words appear as soon as the model starts writing,
+  // instead of waiting for the whole answer.
+  const stream = await engine.chat.completions.create({
     messages,
     temperature: CONFIG.temperature,
     max_tokens: CONFIG.maxTokens,
+    stream: true,
   });
-  return cleanModelText(reply?.choices?.[0]?.message?.content || "");
+  let text = "";
+  for await (const chunk of stream) {
+    const delta = chunk?.choices?.[0]?.delta?.content || "";
+    if (!delta) continue;
+    text += delta;
+    if (onToken) onToken(cleanModelText(text));
+  }
+  return cleanModelText(text);
+}
+
+// Run one tiny answer right after loading, so the first real question
+// doesn't also pay the one-time GPU start-up cost.
+async function warmUpWebLLM() {
+  try {
+    const engine = await loadWebLLM();
+    await engine.chat.completions.create({
+      messages: [
+        { role: "system", content: buildSystemPrompt() },
+        { role: "user", content: "Hi" },
+      ],
+      max_tokens: 1,
+    });
+  } catch (e) {}
 }
 
 async function postToOllama(messages) {
@@ -667,13 +692,13 @@ async function postToProxy(messages) {
   return cleanModelText(data?.reply || "");
 }
 
-async function postToModel(messages) {
+async function postToModel(messages, onToken) {
   if (CONFIG.provider === "ollama") return postToOllama(messages);
   if (CONFIG.provider === "proxy") return postToProxy(messages);
-  return postToWebLLM(messages);
+  return postToWebLLM(messages, onToken);
 }
 
-async function callChatApi(userText) {
+async function callChatApi(userText, onToken) {
   const messages = [
     {
       role: "system",
@@ -686,7 +711,7 @@ async function callChatApi(userText) {
     },
   ];
 
-  const text = await postToModel(messages);
+  const text = await postToModel(messages, onToken);
   return text || "Hmm, I couldn't think of an answer. Can you ask me again?";
 }
 
@@ -745,14 +770,33 @@ async function sendMessage(textOverride) {
 
   setLoading(true);
 
+  let liveRow = null;
+  const showPartial = (partial) => {
+    if (!partial) return;
+    if (!liveRow) {
+      removeTypingRow();
+      liveRow = addMessage("assistant", partial);
+      return;
+    }
+    const textEl = liveRow.querySelector(".bubble > div:last-child");
+    if (textEl) textEl.textContent = partial;
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  };
+
   try {
-    const reply = await callChatApi(text);
+    const reply = await callChatApi(text, showPartial);
     removeTypingRow();
     hideUnsafePrompt();
-    addMessage("assistant", reply);
+    if (liveRow) {
+      const textEl = liveRow.querySelector(".bubble > div:last-child");
+      if (textEl) textEl.textContent = reply;
+    } else {
+      addMessage("assistant", reply);
+    }
     addToHistory("assistant", reply);
     clearRestrictedState();
   } catch (error) {
+    if (liveRow) liveRow.remove();
     removeTypingRow();
     const errorMessage = `Sorry — ${error.message}`;
     addMessage("assistant", errorMessage);
@@ -1101,5 +1145,5 @@ addToHistory("assistant", WELCOME_MESSAGE);
 
 // Start downloading/loading the in-browser model right away, so it is ready before the first question.
 if (CONFIG.provider === "webllm") {
-  loadWebLLM().catch(() => {});
+  loadWebLLM().then(() => warmUpWebLLM()).catch(() => {});
 }

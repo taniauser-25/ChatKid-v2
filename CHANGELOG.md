@@ -3,6 +3,14 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.1.0] - 2026-11-09
+
+### Changed
+- **Faster-feeling answers:** ChatKid's answers now appear word by word as they are written (streaming), instead of after the whole answer is finished.
+- ChatKid runs a tiny warm-up answer right after loading, so the first question is faster.
+- Answers are kept shorter (1–3 sentences, or up to 4 ideas), which makes them faster and easier for kids to read.
+- ChatKid now remembers the last 6 messages instead of 8, so each answer has less to read.
+
 ## [2.0.0] - 2026-11-09
 
 ### Added
