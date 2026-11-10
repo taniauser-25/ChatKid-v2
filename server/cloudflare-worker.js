@@ -10,7 +10,7 @@
 //
 // Note for the IRB: with this option, children's messages are sent to the model provider.
 
-const ALLOWED_ORIGIN = "https://your-name.github.io";
+const ALLOWED_ORIGIN = "https://taniauser-25.github.io";
 const MODEL = "claude-haiku-5-5";
 
 function cors(extra = {}) {
