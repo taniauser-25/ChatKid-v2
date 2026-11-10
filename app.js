@@ -1,3 +1,11 @@
+// ===== Version =====
+// Semantic versioning (MAJOR.MINOR.PATCH). When you release a new version:
+//   1. Update APP_VERSION here.
+//   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
+//   3. Add an entry to CHANGELOG.md.
+//   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
+const APP_VERSION = "2.0.0";
+
 // ===== Where ChatKid's "brain" runs =====
 // provider:
 //   "webllm" – the model runs inside the child's browser (no server, no API key, nothing leaves the
@@ -222,6 +230,10 @@ const modalCardEl = notifyModalEl?.querySelector(".modal-card");
 const modalIconEl = notifyModalEl?.querySelector(".modal-icon");
 
 copyrightYearEl.textContent = new Date().getFullYear();
+
+const appVersionEl = document.getElementById("appVersion");
+if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
+console.info(`ChatKid v${APP_VERSION} (model provider: ${CONFIG.provider})`);
 
 function normalize(text) {
   return String(text)

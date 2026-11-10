@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KidSafe Chat</title>
-    <meta name="description" content="KidSafe Chat" />
+    <title>ChatKid</title>
+    <meta name="description" content="ChatKid: a child-centered chatbot that follows rules written by kids" />
     <link rel="icon" type="image/svg+xml" href="./Logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,7 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=2.0.0" />
   </head>
   <body>
     <canvas id="bgCanvas" aria-hidden="true"></canvas>
@@ -83,7 +83,7 @@
             <button class="suggestion-btn" data-suggestion="What causes volcanoes to erupt?">What causes volcanoes to erupt?</button>
           </section>
 
-          <div class="copyright">© <span id="copyrightYear"></span> Meherunnesa Tania</div>
+          <div class="copyright">© <span id="copyrightYear"></span> Meherunnesa Tania · <span id="appVersion" class="app-version" title="ChatKid version"></span></div>
         </footer>
       </main>
     </div>
@@ -159,6 +159,6 @@
     </div>
 
 
-    <script src="./app.js"></script>
+    <script src="./app.js?v=2.0.0"></script>
   </body>
 </html>

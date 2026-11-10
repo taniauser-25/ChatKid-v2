@@ -1,4 +1,4 @@
-# ChatKid Prototype
+# ChatKid Prototype (v2.0.0)
 
 ChatKid is a research prototype of a child-centered chatbot designed to support children’s everyday questions in a safe and age-appropriate way. The system combines a rule-based safety layer with a local language model to provide child-friendly responses while maintaining clear boundaries and encouraging parent involvement.
 
@@ -143,3 +143,7 @@ ChatKid can now run from a website, such as GitHub Pages. By default it uses **W
 ChatKid follows 14 rules written by children in a KidsTeam session (2026-11-05). They are in `KIDS_RULEBOOK` in `app.js`.
 
 The **RuleBook** button opens a panel that shows children their DO and DON'T rules and who the kids said can change each one.
+
+## Versions
+
+The current version is shown at the bottom of the ChatKid page. See `CHANGELOG.md` for what changed in each version.

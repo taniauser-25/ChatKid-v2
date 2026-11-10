@@ -1125,3 +1125,9 @@ body[data-mood="confused"] {
   display: grid;
   place-items: center;
 }
+
+/* ===== Version label ===== */
+.app-version {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
