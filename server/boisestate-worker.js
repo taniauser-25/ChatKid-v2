@@ -16,13 +16,21 @@
 //   - Usage counts toward your monthly boisestate.ai quota.
 //   - Messages are sent to boisestate.ai (hosted by Boise State); nothing is stored by this Worker.
 
-const ALLOWED_ORIGIN = "https://taniauser-25.github.io";
+// Websites allowed to use this server (add more if ChatKid moves).
+const ALLOWED_ORIGINS = [
+  "https://chatkid.meherunnesatania.com",
+  "https://meherunnesatania.com",
+  "https://www.meherunnesatania.com",
+  "https://taniauser-25.github.io",
+];
 const API_URL = "https://api.boisestate.ai/chat/api-converse";
 const DEFAULT_MODEL = "us.amazon.nova-lite-v1:0"; // fastest; nova-pro is more capable
 
+let currentOrigin = ALLOWED_ORIGINS[0];
+
 function cors(extra = {}) {
   return {
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Origin": currentOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     Vary: "Origin",
@@ -71,6 +79,8 @@ export function toBoiseStateRequest(messages, { modelId, maxTokens, temperature 
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get("Origin") || "";
+    currentOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
     if (request.method === "OPTIONS") return new Response(null, { headers: cors() });
     if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
     if (!env.BOISESTATE_AI_KEY) return json({ error: "missing_key" }, 500);
