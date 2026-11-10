@@ -2,7 +2,7 @@
 
 ChatKid is a research prototype of a child-centered chatbot for children aged 6–11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-**Current version:** 2.1.1 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Current version:** 2.2.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 ---
 
@@ -75,11 +75,17 @@ ChatKid runs on any static website, such as GitHub Pages. No server, API key, or
 2. Start a local server as in Option 2.
 3. Open `http://localhost:8000/?provider=ollama`.
 
-### Option 4: With a hosted model
+### Option 4: With boisestate.ai (fast, hosted by Boise State)
 
-For laptops that can't run the in-browser model, `server/cloudflare-worker.js` is a small server that forwards questions to a hosted model while keeping the API key secret. Setup steps are at the top of that file. Then open ChatKid with `?provider=proxy`.
+ChatKid can use Boise State University's AI service, [boisestate.ai](https://boisestate.ai), through a small Cloudflare Worker that keeps the API key secret. Answers arrive in a few seconds on any laptop.
 
-> With this option, children's messages are sent to the model provider. Check that this is covered by your IRB.
+1. On boisestate.ai, go to **Settings → API Keys** and create a key.
+2. Create a Cloudflare Worker, paste in `server/boisestate-worker.js`, and add the key as a secret named `BOISESTATE_AI_KEY` (full steps are at the top of that file).
+3. Put the Worker's address in `CONFIG.proxy.url` in `app.js`. ChatKid then uses boisestate.ai automatically; add `?provider=webllm` to the address to use the in-browser model instead.
+
+> boisestate.ai keys expire every 90 days, and usage counts toward your monthly boisestate.ai quota. Messages are sent to boisestate.ai, so make sure your IRB covers this.
+
+`server/cloudflare-worker.js` is an alternative server for Anthropic's Claude API.
 
 ## Settings
 
@@ -88,7 +94,7 @@ All settings are at the top of `app.js`:
 | Setting | What it does |
 |---|---|
 | `APP_VERSION` | The version shown in the footer |
-| `CONFIG.provider` | Where the AI runs: `webllm` (in the browser), `ollama`, or `proxy` |
+| `CONFIG.provider` | Where the AI runs: `auto` (default: `proxy` if a server address is set, otherwise `webllm`), `webllm`, `ollama`, or `proxy` |
 | `CONFIG.webllm.model` | Which in-browser model to use |
 | `RESTRICTED_TERMS` | Words that trigger the "ask a grown-up" prompt |
 | `KIDS_RULEBOOK` | The children's rules |
@@ -103,7 +109,8 @@ You can also change the provider or model from the address bar, for example `?pr
 | `styles.css` | Visual design |
 | `app.js` | Chat logic, safety check, RuleBook, and model connection |
 | `rulebook-icon.svg` | RuleBook icon |
-| `server/cloudflare-worker.js` | Optional server for a hosted model |
+| `server/boisestate-worker.js` | Server for boisestate.ai (hosted by Boise State) |
+| `server/cloudflare-worker.js` | Alternative server for Anthropic's Claude API |
 | `CHANGELOG.md` | Version history |
 
 ## Releasing a new version

@@ -4,18 +4,20 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.1.1";
+const APP_VERSION = "2.2.0";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
+//   "auto"   – use "proxy" when CONFIG.proxy.url is set, otherwise "webllm" (default).
 //   "webllm" – the model runs inside the child's browser (no server, no API key, nothing leaves the
 //              computer). Works when ChatKid is hosted on any website (e.g., GitHub Pages).
 //              Needs Chrome/Edge on a laptop with WebGPU. First load downloads the model (~2 GB), then it is cached.
 //   "ollama" – the original local setup (Ollama running on this computer). Only works when opened locally.
-//   "proxy"  – a hosted model behind your own small server (see server/cloudflare-worker.js).
+//   "proxy"  – a hosted model behind your own small server: server/boisestate-worker.js (boisestate.ai)
+//              or server/cloudflare-worker.js (Anthropic). The API key stays on that server.
 // You can switch without editing code by adding ?provider=ollama (or webllm / proxy) to the page URL.
 const CONFIG = {
-  provider: "webllm",
+  provider: "auto",
   webllm: {
     library: "https://esm.run/@mlc-ai/web-llm@0.2.86",
     // 3B follows the kids' rulebook much better than 1B.
@@ -27,7 +29,8 @@ const CONFIG = {
     model: "llama3.2:3b",
   },
   proxy: {
-    url: "", // e.g. "https://chatkid-proxy.your-name.workers.dev"
+    // Your Cloudflare Worker running server/boisestate-worker.js, e.g. "https://chatkid-proxy.your-name.workers.dev"
+    url: "",
   },
   maxHistoryMessages: 6,
   maxTokens: 200,
@@ -35,6 +38,7 @@ const CONFIG = {
 };
 
 (function applyUrlOverrides() {
+  if (CONFIG.provider === "auto") CONFIG.provider = CONFIG.proxy.url ? "proxy" : "webllm";
   try {
     const params = new URLSearchParams(window.location.search);
     const p = params.get("provider");
@@ -686,7 +690,14 @@ async function postToProxy(messages) {
   }
 
   if (!response.ok) {
-    throw new Error(`the ChatKid server returned an error (${response.status}).`);
+    const info = await response.json().catch(() => ({}));
+    const reasons = {
+      key_expired: "ChatKid's boisestate.ai key has expired. A grown-up needs to make a new key and update the server.",
+      quota_exceeded: "ChatKid has used up this month's boisestate.ai allowance.",
+      rate_limited: "ChatKid is getting a lot of questions right now. Please wait a moment and try again.",
+      missing_key: "the ChatKid server doesn't have its API key yet.",
+    };
+    throw new Error(reasons[info?.error] || `the ChatKid server returned an error (${response.status}).`);
   }
 
   const data = await response.json();

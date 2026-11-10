@@ -3,6 +3,13 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.2.0] - 2026-11-09
+
+### Added
+- **boisestate.ai support:** `server/boisestate-worker.js` connects ChatKid to Boise State University's AI service (Amazon Nova Lite by default) through a Cloudflare Worker that keeps the API key secret. Answers arrive in a few seconds on any laptop.
+- ChatKid uses the hosted model automatically when `CONFIG.proxy.url` is set (`provider: "auto"`); otherwise it uses the in-browser model.
+- Clear messages when the boisestate.ai key has expired, the monthly allowance is used up, or the service is busy.
+
 ## [2.1.1] - 2026-11-09
 
 ### Changed
