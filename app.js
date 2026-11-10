@@ -102,7 +102,7 @@ const KIDS_RULEBOOK = [
     whoCanChange: "Kids & parents together" },
 ];
 
-// Rules the kids wrote that ChatKid cannot follow yet (shown in the "Our Rules" panel only).
+// Rules the kids wrote that ChatKid cannot follow yet (kept for reference; not shown to children).
 const KIDS_RULES_NOT_YET = [
   { type: "DO", team: 3, text: "Recognize live sign language", whoCanChange: "Kids & parents together",
     why: "ChatKid would need a camera and a sign-language helper." },
@@ -110,33 +110,27 @@ const KIDS_RULES_NOT_YET = [
     why: "ChatKid would need to recognize voices." },
 ];
 
-// ===== "Our Rules" panel =====
+// ===== RuleBook panel =====
 function renderRulesList() {
   const listEl = document.getElementById("rulesList");
   if (!listEl) return;
 
-  const card = (rule, kind, extra = "") => `
+  const card = (rule, kind) => `
     <div class="rule-item ${kind}">
-      <div class="rule-text">${kind === "dont" ? "Don't: " : kind === "do" ? "Do: " : ""}${escapeHtml(rule.text)}</div>
+      <div class="rule-text">${escapeHtml(rule.text)}</div>
       <div class="rule-meta">
-        <span class="rule-chip">Team ${escapeHtml(rule.team)}</span>
         <span class="rule-chip owner">Who can change it: ${escapeHtml(rule.whoCanChange)}</span>
       </div>
-      ${extra}
     </div>`;
 
   const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
   const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
 
   listEl.innerHTML =
-    `<div class="rules-section-title do">✅ ChatKid SHOULD…</div>` +
+    `<div class="rules-section-title do">✅ DO rules</div>` +
     dos.map((r) => card(r, "do")).join("") +
-    `<div class="rules-section-title dont">🚫 ChatKid should NOT…</div>` +
-    donts.map((r) => card(r, "dont")).join("") +
-    `<div class="rules-section-title notyet">🛠️ ChatKid can't do these yet</div>` +
-    KIDS_RULES_NOT_YET.map((r) =>
-      card(r, "notyet", `<div class="flagged-time">${escapeHtml(r.why)}</div>`)
-    ).join("");
+    `<div class="rules-section-title dont">🚫 DON'T rules</div>` +
+    donts.map((r) => card(r, "dont")).join("");
 }
 
 function showRulesModal() {
@@ -157,7 +151,7 @@ function hideRulesModal() {
 function buildSystemPrompt() {
   const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
   const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
-  const line = (r) => `- "${r.text}" (Team ${r.team}): ${r.howTo}`;
+  const line = (r) => `- "${r.text}": ${r.howTo}`;
 
   return (
     `You are ${BOT_NAME}, a friendly chatbot for children aged 6 to 11. ` +
@@ -814,7 +808,7 @@ if (clearFlaggedBtn) {
   });
 }
 
-// ===== Our Rules button + panel =====
+// ===== RuleBook button + panel =====
 document.getElementById("rulesFab")?.addEventListener("click", () => showRulesModal());
 document.getElementById("closeRulesBtn")?.addEventListener("click", () => {
   hideRulesModal();
