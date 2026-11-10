@@ -1,149 +1,126 @@
-# ChatKid Prototype (v2.0.0)
+# ChatKid
 
-ChatKid is a research prototype of a child-centered chatbot designed to support children’s everyday questions in a safe and age-appropriate way. The system combines a rule-based safety layer with a local language model to provide child-friendly responses while maintaining clear boundaries and encouraging parent involvement.
+ChatKid is a research prototype of a child-centered chatbot for children aged 6–11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-## Features
+**Current version:** 2.0.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
-- Child-friendly chatbot interaction
-- Rule-based detection of restricted or sensitive topics
-- Warning prompt for restricted questions
-- Parent notification prototype flow
-- Local LLM-based response generation for safe inputs
-- Simple and interactive user interface for children
+---
 
-## Technologies Used
+## What ChatKid does
 
-- HTML
-- CSS
-- JavaScript
-- Ollama
-- llama3.2:1b local language model
+- **Child-friendly chat:** kids can type or use the microphone, pick a mood and an avatar, and tap suggested questions.
+- **Kids' RuleBook:** ChatKid follows 14 rules that children wrote in a KidsTeam co-design session (2026-11-05).
+- **RuleBook panel:** the RuleBook button shows children the DO and DON'T rules and who can change each one.
+- **Safety check:** questions containing sensitive words (for example, weapons) trigger an "ask a grown-up" prompt before the AI answers.
+- **Child-controlled parent involvement:** the child chooses whether to notify their parents. Flagged questions are saved in the Flagged list on that device only.
+- **Private by default:** the AI model runs inside the browser, so children's messages never leave the computer.
 
-## Requirements
+## The Kids' RuleBook
 
-Before running the prototype, make sure you have:
+| DO rules | DON'T rules |
+|---|---|
+| Ask for permission before making decisions. | Never give dangerous information. |
+| Make sure you understand what kids are saying. | Never make the same mistakes again and again. |
+| Give ideas for YouTube videos. | Never just give the answer. Help kids understand and learn. |
+| Give ideas for family trips. | Never teach things parents can teach, like how to draw a heart. |
+| Help kids stay away from doing bad things. | Never make mistakes. Say "I'm not sure" instead of guessing. |
+| Follow instructions exactly and give accurate answers. | Never explain how to use weapons. |
+| | Never get angry or "crash out." |
+| | Never give false answers. |
 
-- Visual Studio Code installed
-- A modern web browser such as Google Chrome
-- Ollama installed on your computer
-- The `llama3.2:1b` model downloaded locally
+The rules are stored in `KIDS_RULEBOOK` in `app.js`. Each rule keeps the children's exact words (`kidsWords`), the rule sentence shown to children (`rule`), instructions for the model (`howTo`), and who the children said can change it (`whoCanChange`).
 
-### 1. Visual Studio Code
+Two rules children wrote are not included yet because ChatKid can't do them: recognizing live sign language, and recognizing a child's voice versus an adult's.
 
-Visual Studio Code is used to open and run the project files.
+## How it works
 
-- Download and install **Visual Studio Code**
-- Open the ChatKid Prototype project folder inside VS Code
+1. The child asks a question.
+2. The safety check looks for sensitive words. If it finds one, ChatKid asks whether to notify a parent instead of answering.
+3. Otherwise, the question goes to the AI model with the Kids' RuleBook as its instructions.
+4. ChatKid shows the answer.
 
-### 2. A Modern Web Browser
+## Running ChatKid
 
-You will need a browser to open and use the prototype.
+### Option 1: Online (recommended)
 
-Supported browser:
+ChatKid runs on any static website, such as GitHub Pages. No server, API key, or installation is needed.
 
-- Google Chrome
+**Publish on GitHub Pages**
+1. In the repository, go to **Settings → Pages**.
+2. Under **Build and deployment**, choose **Deploy from a branch**, select `main` and `/ (root)`, and click **Save**.
+3. After about a minute, ChatKid is live at `https://<your-username>.github.io/<repo-name>/`.
 
-Using the latest version of the browser is recommended for the best performance.
+> GitHub Pages works with public repositories on a free account. Private repositories need GitHub Pro (free for students through the GitHub Student Developer Pack).
 
-### 3. Ollama Installed on Your Computer
-
-ChatKid uses **Ollama** to run the language model locally on your machine. This means the chatbot does not depend on an online API. Instead, it connects to a local API running on your computer.
-
-#### To set up Ollama
-
-1. Download and install **Ollama**
-2. After installation, open a terminal and make sure Ollama is available
-3. Make sure Ollama is running on your computer
-
-### 4. Download the Required Model
-
-Open a terminal in Visual Studio Code and run:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-This command downloads the required model to your local machine.
-Or, 
-You can find the `llama3.2:1b` model by searching for it in Ollama and download it manually.
-
-## Step-by-Step Instructions to Run ChatKid
-
-Follow these steps to run the prototype:
-
-### Step 1: Open the project in Visual Studio Code
-
-Open the **ChatKid** project folder in **Visual Studio Code**.
-
-### Step 2: Make sure Ollama is installed and running
-
-Install **Ollama** on your computer if it is not already installed.
-
-Make sure Ollama is running locally.
-
-### Step 3: Download the required model
-
-Open a terminal in **Visual Studio Code** and run:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-### Step 4: Open a new terminal in VS Code
-
-In **Visual Studio Code**, open a **new terminal**.
-
-### Step 5: Run the local server
-
-In the new terminal, run:
-
-```bash
-python -m http.server 8000 -d docs
-```
-
-This starts a local server using the `docs` folder.
-
-### Step 6: Open the prototype in your browser
-
-After the server starts, open your browser and go to:
-
-```text
-http://127.0.0.1:8000/
-```
-
-### Step 7: Start using ChatKid
-
-You can now interact with the chatbot in your browser.
-
-- If the question is allowed, ChatKid will respond.
-- If the question is restricted, ChatKid will show a warning and give the option to notify a parent.
-
-
-
-## Running ChatKid Online (no Ollama needed)
-
-ChatKid can now run from a website, such as GitHub Pages. By default it uses **WebLLM**, which runs the model (`Llama-3.2-3B-Instruct`) inside the child's browser. There is no server and no API key, and children's messages never leave the computer.
-
-### Publish on GitHub Pages
-1. Push these files to your GitHub repository.
-2. On GitHub, go to **Settings → Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, and save.
-3. After a minute, ChatKid is live at `https://<your-username>.github.io/<repo-name>/`.
-
-### Requirements for the computer that opens ChatKid
+**Computer requirements**
 - **Google Chrome or Microsoft Edge** on a laptop or desktop (the browser needs WebGPU).
-- The **first visit downloads the model (about 2 GB)**. Open ChatKid on each session laptop before the session so it is cached. Later visits load in seconds.
-- On weaker laptops, use the smaller model by adding `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC` to the URL.
+- **The first visit downloads the AI model (about 2 GB).** Open ChatKid on each session laptop beforehand so the model is saved. Later visits load in seconds.
+- On weaker laptops, add `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC` to the address to use a smaller model (about 0.9 GB).
 
-### Other ways to run it
-- Local Ollama (the original setup): open with `?provider=ollama`.
-- Hosted model through your own server: see `server/cloudflare-worker.js`, then open with `?provider=proxy`.
+### Option 2: On your own computer
 
-## Kids' Rulebook
+1. Download or clone this repository.
+2. In the project folder, start a local server:
+   ```bash
+   python -m http.server 8000
+   ```
+3. Open `http://localhost:8000` in Chrome or Edge.
 
-ChatKid follows 14 rules written by children in a KidsTeam session (2026-11-05). They are in `KIDS_RULEBOOK` in `app.js`.
+### Option 3: With Ollama (the original v1 setup)
 
-The **RuleBook** button opens a panel that shows children their DO and DON'T rules and who the kids said can change each one.
+1. Install [Ollama](https://ollama.com) and download the model:
+   ```bash
+   ollama pull llama3.2:3b
+   ```
+2. Start a local server as in Option 2.
+3. Open `http://localhost:8000/?provider=ollama`.
 
-## Versions
+### Option 4: With a hosted model
 
-The current version is shown at the bottom of the ChatKid page. See `CHANGELOG.md` for what changed in each version.
+For laptops that can't run the in-browser model, `server/cloudflare-worker.js` is a small server that forwards questions to a hosted model while keeping the API key secret. Setup steps are at the top of that file. Then open ChatKid with `?provider=proxy`.
+
+> With this option, children's messages are sent to the model provider. Check that this is covered by your IRB.
+
+## Settings
+
+All settings are at the top of `app.js`:
+
+| Setting | What it does |
+|---|---|
+| `APP_VERSION` | The version shown in the footer |
+| `CONFIG.provider` | Where the AI runs: `webllm` (in the browser), `ollama`, or `proxy` |
+| `CONFIG.webllm.model` | Which in-browser model to use |
+| `RESTRICTED_TERMS` | Words that trigger the "ask a grown-up" prompt |
+| `KIDS_RULEBOOK` | The children's rules |
+
+You can also change the provider or model from the address bar, for example `?provider=ollama` or `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC`.
+
+## Project files
+
+| File | Purpose |
+|---|---|
+| `index.html` | Page layout |
+| `styles.css` | Visual design |
+| `app.js` | Chat logic, safety check, RuleBook, and model connection |
+| `rulebook-icon.svg` | RuleBook icon |
+| `server/cloudflare-worker.js` | Optional server for a hosted model |
+| `CHANGELOG.md` | Version history |
+
+## Releasing a new version
+
+ChatKid uses [semantic versioning](https://semver.org/) (MAJOR.MINOR.PATCH): bug fixes raise the last number (2.0.1), new features the middle number (2.1.0), and big changes the first number (3.0.0).
+
+1. Update `APP_VERSION` in `app.js`.
+2. Update the `?v=` numbers for `styles.css` and `app.js` in `index.html`, so browsers load the new files.
+3. Add an entry to `CHANGELOG.md`.
+4. Create a release on GitHub with a tag such as `v2.0.1`.
+
+## Technologies
+
+HTML, CSS, JavaScript · [WebLLM](https://github.com/mlc-ai/web-llm) (in-browser AI) · Llama 3.2 3B Instruct · optional Ollama or hosted model
+
+## Research context
+
+ChatKid was developed in the KidsTeam lab at Boise State University as part of research on children's agency in child–parent–AI interaction. The RuleBook comes from a cooperative inquiry session in which children wrote rules for AI chatbots and chose who should be able to change them.
+
+© 2026 Meherunnesa Tania
