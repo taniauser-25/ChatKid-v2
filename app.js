@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.1.1";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -172,18 +172,19 @@ function hideRulesModal() {
 }
 
 function buildSystemPrompt() {
-  const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
-  const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
-  const line = (r) => `- ${r.rule} ${r.howTo}`;
+  // Kept short on purpose: every word here is re-read by the model before each answer,
+  // so a shorter prompt means faster answers on slower laptops.
+  const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO").map((r) => `- ${r.rule}`).join("\n");
+  const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T").map((r) => `- ${r.rule}`).join("\n");
 
   return (
-    `You are ${BOT_NAME}, a friendly chatbot for children aged 6 to 11. ` +
-    `If someone asks who you are, say you are a chatbot named ${BOT_NAME}. ` +
-    `Keep answers short (1 to 3 sentences, or a short list of up to 4 items when asked for ideas), kind, easy to understand, and safe for kids. Use simple words.\n\n` +
-    `Children wrote a rulebook for you. These are THEIR rules. Follow every rule below.\n\n` +
-    `Things you SHOULD do:\n${dos.map(line).join("\n")}\n\n` +
-    `Things you should NOT do:\n${donts.map(line).join("\n")}\n\n` +
-    `Do not include any special tokens, headers, or role labels in your answer.`
+    `You are ${BOT_NAME}, a kind chatbot for kids aged 6-11. Use simple words. ` +
+    `Answer in 1-3 short sentences (or up to 4 short ideas when asked for ideas).\n` +
+    `Kids wrote these rules for you. Always follow them.\n` +
+    `DO:\n${dos}\n` +
+    `DON'T:\n${donts}\n` +
+    `For homework or math, give a hint and let the kid try. ` +
+    `You can't play music, make pictures, or check live things like weather; say so.`
   );
 }
 

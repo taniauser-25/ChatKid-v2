@@ -3,6 +3,11 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.1.1] - 2026-11-09
+
+### Changed
+- Shorter instructions for the model (about 65% shorter): the RuleBook rules are sent as short rule sentences, so the model has less to read before each answer and starts answering sooner.
+
 ## [2.1.0] - 2026-11-09
 
 ### Changed
