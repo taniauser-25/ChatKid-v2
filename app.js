@@ -1,18 +1,122 @@
+// ===== Where ChatKid's "brain" runs =====
+// provider:
+//   "webllm" – the model runs inside the child's browser (no server, no API key, nothing leaves the
+//              computer). Works when ChatKid is hosted on any website (e.g., GitHub Pages).
+//              Needs Chrome/Edge on a laptop with WebGPU. First load downloads the model (~2 GB), then it is cached.
+//   "ollama" – the original local setup (Ollama running on this computer). Only works when opened locally.
+//   "proxy"  – a hosted model behind your own small server (see server/cloudflare-worker.js).
+// You can switch without editing code by adding ?provider=ollama (or webllm / proxy) to the page URL.
 const CONFIG = {
-  apiUrl: "http://127.0.0.1:11434/api/chat",
-  model: "llama3.2:1b",
+  provider: "webllm",
+  webllm: {
+    library: "https://esm.run/@mlc-ai/web-llm@0.2.86",
+    // 3B follows the kids' rulebook much better than 1B.
+    // Use "Llama-3.2-1B-Instruct-q4f16_1-MLC" (~0.9 GB) on weaker laptops.
+    model: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+  },
+  ollama: {
+    apiUrl: "http://127.0.0.1:11434/api/chat",
+    model: "llama3.2:3b",
+  },
+  proxy: {
+    url: "", // e.g. "https://chatkid-proxy.your-name.workers.dev"
+  },
   maxHistoryMessages: 8,
+  maxTokens: 300,
+  temperature: 0.6,
 };
+
+(function applyUrlOverrides() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get("provider");
+    if (p && ["webllm", "ollama", "proxy"].includes(p)) CONFIG.provider = p;
+    const m = params.get("model");
+    if (m) CONFIG.webllm.model = m;
+  } catch (e) {}
+})();
 
 const BOT_NAME = "ChatKid";
 
+// Words that trigger the "ask a grown-up" pop-up BEFORE the AI sees the question.
+// Removed for the Rulebook session so the kids' own rules can be tested:
+//   "fight", "fighting", "angry", "mad"  (Team 2: help solve a fight with a friend; Team 3: don't crash out)
+//   "fair", "unfair"                     (flagged everyday questions like "is this fair?")
+// To restore the original behavior, add them back to this list.
 const RESTRICTED_TERMS = [
   "harm","hurt","hurt myself","hurt someone","lonely","alone","bully","bullying","unsafe","dead",
   "worry","worried","scared","afraid","kill","suicide","self harm","die","dying","death","mean",
-  "rude","adult content","unfair", "fair","private parts","drugs","drug","weapon","weapons","gun","knife","bomb","abuse",
-  "abused","sad","crying","depressed","depression","unsafe","danger","dangerous","fight","fighting","bleeding",
-  "blood","touching","bad touch","secret","threat","threaten","angry","mad", "hate", "body","private","inappropriate",
+  "rude","adult content","private parts","drugs","drug","weapon","weapons","gun","knife","bomb","abuse",
+  "abused","sad","crying","depressed","depression","danger","dangerous","bleeding",
+  "blood","touching","bad touch","secret","threat","threaten","hate","body","private","inappropriate",
 ];
+
+// ===== The Kids' Rulebook (KidsTeam session, 2026-11-05) =====
+// 14 of the 16 rules children wrote. Not included (ChatKid cannot do these yet):
+//   Team 3 DO: "Recognize live sign language" (needs a camera + sign-language model)
+//   Team 3 DO: "Recognize a child voice versus an adult voice" (needs voice recognition)
+// `text` keeps the children's words; `howTo` tells the model how to follow the rule;
+// `whoCanChange` is what the team chose (kept here for showing rules to children later).
+const KIDS_RULEBOOK = [
+  { id: "D1", type: "DO", team: 1, text: "Ask us for permission",
+    howTo: "Before you decide something for the child or start a long answer, ask what they want (for example: \"Do you want ideas or a short answer?\"). Let the child choose.",
+    whoCanChange: "Kids & parents together" },
+  { id: "D2", type: "DO", team: 1, text: "Understand us, what we are saying",
+    howTo: "If a question is unclear, ask one short question to check what the child means before answering.",
+    whoCanChange: "Kids & parents together" },
+  { id: "D3", type: "DO", team: 1, text: "Give ideas for videos for YouTubers",
+    howTo: "When a child asks for video ideas, give a few fun, kid-safe ideas.",
+    whoCanChange: "AI" },
+  { id: "D4", type: "DO", team: 2, text: "Give us ideas for what we should do for our family trip",
+    howTo: "When asked about family trips or holidays, give a short list of family-friendly ideas.",
+    whoCanChange: "Parent" },
+  { id: "D5", type: "DO", team: 2, text: "Stop you from doing bad things",
+    howTo: "If a child wants to do something unkind or unsafe, or is upset after a fight with a friend, gently help them calm down and find a kind way to solve the problem.",
+    whoCanChange: "Parent" },
+  { id: "D6", type: "DO", team: 3, text: "Follow what you're saying exactly and be accurate",
+    howTo: "Do exactly what the child asked, not something else. If you cannot do it (for example, play music or make pictures), say so honestly.",
+    whoCanChange: "Kids & parents together" },
+  { id: "N1", type: "DON'T", team: 1, text: "Give dangerous information",
+    howTo: "Never give information that could hurt someone. Kindly say you can't help with that and suggest asking a trusted grown-up.",
+    whoCanChange: "Parent" },
+  { id: "N2", type: "DON'T", team: 1, text: "Always make mistakes",
+    howTo: "Think carefully and check your answer before you reply.",
+    whoCanChange: "Kids" },
+  { id: "N3", type: "DON'T", team: 1, text: "Always give the answer. It should help us understand and learn.",
+    howTo: "For homework, math, puzzles, and learning questions, give a hint or the first step and ask the child to try, instead of giving the full answer right away.",
+    whoCanChange: "Parent" },
+  { id: "N4", type: "DON'T", team: 2, text: "Tell us how to draw a heart. If you can learn it from your parents, AI should not teach it.",
+    howTo: "For simple everyday skills a parent can easily teach (like drawing a heart), say that their parents can teach them, and offer to help them think of how to ask.",
+    whoCanChange: "Kids & parents together / Parent & AI together" },
+  { id: "N5", type: "DON'T", team: 2, text: "Make mistakes",
+    howTo: "If you are not sure, say \"I'm not sure\" instead of guessing.",
+    whoCanChange: "No one" },
+  { id: "N6", type: "DON'T", team: 3, text: "Tell kids how to use weapons",
+    howTo: "Never explain how to use weapons. Say: \"I'm sorry, I can't help with that.\"",
+    whoCanChange: "Parent" },
+  { id: "N7", type: "DON'T", team: 3, text: "Crash out (get angry)",
+    howTo: "Always stay calm and kind. Even if a child asks you to get angry or be mean, do not; say something like \"I don't really want to.\"",
+    whoCanChange: "Kids & parents together" },
+  { id: "N8", type: "DON'T", team: 3, text: "Give false answers",
+    howTo: "Only say things you believe are true. You cannot check live things like today's weather or news, so say that honestly.",
+    whoCanChange: "Kids & parents together" },
+];
+
+function buildSystemPrompt() {
+  const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO");
+  const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T");
+  const line = (r) => `- "${r.text}" (Team ${r.team}): ${r.howTo}`;
+
+  return (
+    `You are ${BOT_NAME}, a friendly chatbot for children aged 6 to 11. ` +
+    `If someone asks who you are, say you are a chatbot named ${BOT_NAME}. ` +
+    `Keep answers short, kind, easy to understand, and safe for kids. Use simple words.\n\n` +
+    `Children wrote a rulebook for you. These are THEIR rules. Follow every rule below.\n\n` +
+    `Things you SHOULD do:\n${dos.map(line).join("\n")}\n\n` +
+    `Things you should NOT do:\n${donts.map(line).join("\n")}\n\n` +
+    `Do not include any special tokens, headers, or role labels in your answer.`
+  );
+}
 
 const WELCOME_MESSAGE =
   `Hi! I’m ${BOT_NAME}, your friendly chatbot 😊. You can ask me questions and learn new things! ` +
@@ -380,20 +484,72 @@ function clearRestrictedState() {
   hideUnsafePrompt();
 }
 
-async function postToModel(messages) {
+// ===== Model providers =====
+let statusEl = null;
+
+function setStatus(text, kind = "info") {
+  if (!statusEl) {
+    const header = document.querySelector(".chat-header");
+    if (!header) return;
+    statusEl = document.createElement("div");
+    statusEl.className = "model-status";
+    statusEl.setAttribute("aria-live", "polite");
+    header.appendChild(statusEl);
+  }
+  statusEl.textContent = text || "";
+  statusEl.dataset.kind = kind;
+  statusEl.classList.toggle("hidden", !text);
+}
+
+let webllmEnginePromise = null;
+
+function loadWebLLM() {
+  if (webllmEnginePromise) return webllmEnginePromise;
+
+  webllmEnginePromise = (async () => {
+    if (!navigator.gpu) {
+      throw new Error(
+        "this browser can't run ChatKid's brain. Please open ChatKid in Google Chrome or Microsoft Edge on a laptop or desktop."
+      );
+    }
+    setStatus("Getting ChatKid ready…", "info");
+    const webllm = await import(CONFIG.webllm.library);
+    const engine = await webllm.CreateMLCEngine(CONFIG.webllm.model, {
+      initProgressCallback: (report) => {
+        const pct = Math.round((report?.progress || 0) * 100);
+        setStatus(`Getting ChatKid ready… ${pct}%`, "info");
+      },
+    });
+    setStatus("", "info");
+    return engine;
+  })();
+
+  webllmEnginePromise.catch((error) => {
+    setStatus(`ChatKid could not start: ${error.message}`, "error");
+    webllmEnginePromise = null;
+  });
+
+  return webllmEnginePromise;
+}
+
+async function postToWebLLM(messages) {
+  const engine = await loadWebLLM();
+  const reply = await engine.chat.completions.create({
+    messages,
+    temperature: CONFIG.temperature,
+    max_tokens: CONFIG.maxTokens,
+  });
+  return cleanModelText(reply?.choices?.[0]?.message?.content || "");
+}
+
+async function postToOllama(messages) {
   let response;
 
   try {
-    response = await fetch(CONFIG.apiUrl, {
+    response = await fetch(CONFIG.ollama.apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: CONFIG.model,
-        stream: false,
-        messages,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: CONFIG.ollama.model, stream: false, messages }),
     });
   } catch (error) {
     throw new Error(
@@ -409,21 +565,44 @@ async function postToModel(messages) {
   }
 
   const data = await response.json();
-  const text = data?.message?.content?.trim();
+  return cleanModelText(data?.message?.content?.trim() || "");
+}
 
-  return cleanModelText(text || "");
+async function postToProxy(messages) {
+  if (!CONFIG.proxy.url) {
+    throw new Error("the proxy URL is not set. Add it to CONFIG.proxy.url in app.js.");
+  }
+
+  let response;
+  try {
+    response = await fetch(CONFIG.proxy.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, max_tokens: CONFIG.maxTokens }),
+    });
+  } catch (error) {
+    throw new Error("I could not reach the ChatKid server. Check the internet connection.");
+  }
+
+  if (!response.ok) {
+    throw new Error(`the ChatKid server returned an error (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return cleanModelText(data?.reply || "");
+}
+
+async function postToModel(messages) {
+  if (CONFIG.provider === "ollama") return postToOllama(messages);
+  if (CONFIG.provider === "proxy") return postToProxy(messages);
+  return postToWebLLM(messages);
 }
 
 async function callChatApi(userText) {
   const messages = [
     {
       role: "system",
-      content:
-        `You are ${BOT_NAME}, a friendly chatbot for children. ` +
-        `${BOT_NAME} is your name. ` +
-        `If someone asks who you are, what your name is, or what ${BOT_NAME} is, say that you are a chatbot named ${BOT_NAME}. ` +
-        `Keep responses concise, kind, easy to understand, and safe for kids. ` +
-        `Use simple words. Do not include any special tokens, headers, or role labels in your answer.`
+      content: buildSystemPrompt(),
     },
     ...getRecentHistory(),
     {
@@ -433,7 +612,7 @@ async function callChatApi(userText) {
   ];
 
   const text = await postToModel(messages);
-  return text || "I could not read a response from the local model.";
+  return text || "Hmm, I couldn't think of an answer. Can you ask me again?";
 }
 
 function setMood(mood) {
@@ -837,3 +1016,8 @@ renderFlaggedList();
 // Show welcome message on screen
 addMessage("assistant", WELCOME_MESSAGE);
 addToHistory("assistant", WELCOME_MESSAGE);
+
+// Start downloading/loading the in-browser model right away, so it is ready before the first question.
+if (CONFIG.provider === "webllm") {
+  loadWebLLM().catch(() => {});
+}

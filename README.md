@@ -119,3 +119,25 @@ You can now interact with the chatbot in your browser.
 - If the question is restricted, ChatKid will show a warning and give the option to notify a parent.
 
 
+
+## Running ChatKid Online (no Ollama needed)
+
+ChatKid can now run from a website, such as GitHub Pages. By default it uses **WebLLM**, which runs the model (`Llama-3.2-3B-Instruct`) inside the child's browser. There is no server and no API key, and children's messages never leave the computer.
+
+### Publish on GitHub Pages
+1. Push these files to your GitHub repository.
+2. On GitHub, go to **Settings → Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, and save.
+3. After a minute, ChatKid is live at `https://<your-username>.github.io/<repo-name>/`.
+
+### Requirements for the computer that opens ChatKid
+- **Google Chrome or Microsoft Edge** on a laptop or desktop (the browser needs WebGPU).
+- The **first visit downloads the model (about 2 GB)**. Open ChatKid on each session laptop before the session so it is cached. Later visits load in seconds.
+- On weaker laptops, use the smaller model by adding `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC` to the URL.
+
+### Other ways to run it
+- Local Ollama (the original setup): open with `?provider=ollama`.
+- Hosted model through your own server: see `server/cloudflare-worker.js`, then open with `?provider=proxy`.
+
+## Kids' Rulebook
+
+ChatKid follows 14 rules written by children in a KidsTeam session (2026-11-05). They are in `KIDS_RULEBOOK` in `app.js`.

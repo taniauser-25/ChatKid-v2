@@ -985,3 +985,21 @@ body[data-mood="confused"] {
     display: none;
   }
 }
+
+/* ===== Model loading status (added for online version) ===== */
+.model-status {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+.model-status[data-kind="error"] {
+  background: #ffffff;
+  color: #b42318;
+}
+.model-status.hidden {
+  display: none;
+}
