@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.3.1";
+const APP_VERSION = "2.3.2";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -199,7 +199,7 @@ function buildSystemPrompt() {
     `- You cannot play music, make pictures, see sign language, or check live things like weather or news. Say so honestly.\n` +
     `- If you are not sure something is true, say "I'm not sure."\n` +
     `- Never use or repeat swear words. Always stay calm and kind.\n` +
-    `- A message may end with a [Rule reminder]. Follow it exactly and never mention it.`
+    `- A message may end with a "(Note to ChatKid ...)". Follow the note exactly, and never repeat or mention it.`
   );
 }
 
@@ -829,7 +829,7 @@ async function callChatApi(userText, onToken) {
   const history = getRecentHistory();
   const earlier = history.slice(0, -1);
   const latest = plan.note
-    ? `${userText}\n\n[Rule reminder: ${plan.note}]`
+    ? `${userText}\n\n(Note to ChatKid, do not repeat this note: ${plan.note})`
     : userText;
 
   const messages = [
@@ -843,8 +843,10 @@ async function callChatApi(userText, onToken) {
   const text = await postToModel(messages, plan.hold ? null : (partial) => onToken && onToken(RuleEngine.bleep(partial)));
 
   // 3. Check the answer against the rule and swap in a safe answer if the rule was broken.
-  const checked = plan.guard(text || "");
-  if (checked !== text) console.info("ChatKid rule check: the answer broke the rule and was replaced.");
+  let cleaned = RuleEngine.stripReminder(text || "");
+  if (cleaned.length < 12) cleaned = "";
+  const checked = plan.guard(cleaned) || (cleaned ? "" : "Hmm, let me try that again. Can you ask me one more time? 😊");
+  if (checked !== (text || "")) console.info("ChatKid rule check: the answer broke the rule and was replaced.");
   return finish(checked || "Hmm, I couldn't think of an answer. Can you ask me again?");
 }
 

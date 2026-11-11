@@ -3,6 +3,14 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.3.2] - 2026-11-11
+
+### Changed
+- Math hints and answer checks now come straight from the rule engine, so they appear instantly and are always correct.
+
+### Fixed
+- ChatKid sometimes repeated its hidden rule reminder in an answer. Reminders are now removed from answers before the child sees them.
+
 ## [2.3.1] - 2026-11-11
 
 ### Fixed

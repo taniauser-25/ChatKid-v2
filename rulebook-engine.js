@@ -146,6 +146,20 @@ const RuleEngine = (() => {
     return `You worked hard on this, so let's do it together: ${steps}, and we get ${p.answerText}. So ${p.expr} = ${p.answerText}. Want to try another one?`;
   }
 
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  const PRAISE = ["Yes!", "That's right!", "You got it!", "Correct!"];
+  const NOT_QUITE = ["Not quite, but that was a good try!", "Not yet, but you're close to figuring it out!", "Good try! That's not it yet."];
+  const MATH_OPENERS = ["Let's figure it out together!", "Good question! I won't just tell you, but I'll help.", "Math time!"];
+
+  // Removes a rule reminder if the model repeats it by mistake.
+  function stripReminder(text) {
+    let t = String(text || "");
+    t = t.replace(/\[\s*(rule )?reminder[^\]]*\]?/gi, " ").replace(/\(\s*note to chatkid[^)]*\)?/gi, " ");
+    const cut = t.search(/\b(rule reminder|RULE:|note to chatkid)\b/);
+    if (cut >= 0) t = t.slice(0, cut);
+    return t.replace(/\s{2,}/g, " ").trim();
+  }
+
   const containsNumber = (text, n) => new RegExp(`(^|[^\\d.])${String(n).replace(".", "\\.")}([^\\d]|$)`).test(wordsToDigits(text));
 
   // ---------- Which rule matters for this message? ----------
@@ -220,8 +234,10 @@ const RuleEngine = (() => {
           p.rule = "N3 math: correct answer";
           p.clearMath = true;
           p.note = `The kid answered ${formatNumber(kidAnswer)} for ${prob.expr}. That is CORRECT. Praise them warmly in one or two short sentences, say "${prob.expr} = ${prob.answerText}", and ask if they want another one.`;
-          const fallback = `Yes! ${prob.expr} = ${prob.answerText}. Great job! 🎉 Want to try another one?`;
+          const fallback = `${pick(PRAISE)} ${prob.expr} = ${prob.answerText}. You worked it out yourself! 🎉 Want to try another one?`;
           p.guard = (r) => (/\b(not quite|incorrect|wrong|try again|not right|not correct|close)\b/i.test(r) || !containsNumber(r, prob.answerText) ? fallback : r);
+          // Checking a math answer never needs the AI: answer right away, and always correctly.
+          p.direct = fallback;
           return p;
         }
         m.tries += 1;
@@ -235,7 +251,8 @@ const RuleEngine = (() => {
         p.rule = "N3 math: wrong answer";
         const hint = mathHint(prob, Math.min(m.tries, 1));
         p.note = `The kid answered ${formatNumber(kidAnswer)} for ${prob.expr}. That is NOT correct. Do NOT say the right answer and do NOT say they are right. Kindly say "Not quite" and give this hint in your own words: ${hint}`;
-        const fallback = `Not quite, but that was a good try! ${hint}`;
+        const fallback = `${pick(NOT_QUITE)} ${hint}`;
+        p.direct = fallback;
         p.guard = (r) => {
           const praisesWrong = /\b(correct|that'?s right|you got it|you'?re right|exactly|well done|great job|good job|perfect|yes!)\b/i.test(r) && !/\bnot (quite|correct|right)\b/i.test(r);
           const leaks = prob.answer !== prob.a && prob.answer !== prob.b && containsNumber(r, prob.answerText);
@@ -280,6 +297,8 @@ const RuleEngine = (() => {
         const leaks = problem.answer !== problem.a && problem.answer !== problem.b && containsNumber(r, problem.answerText);
         return leaks || r.length < 12 ? hint : r;
       };
+      // The hint is ready-made, so the kid gets it right away and the answer can never slip out.
+      p.direct = `${pick(MATH_OPENERS)} ${hint}`;
       return p;
     }
 
@@ -380,7 +399,7 @@ const RuleEngine = (() => {
     return p;
   }
 
-  return { plan, bleep, hasSwear, findArithmetic, findKidAnswer, mathHint, looksUnclear, BEEP };
+  return { plan, bleep, hasSwear, findArithmetic, findKidAnswer, mathHint, looksUnclear, stripReminder, BEEP };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = RuleEngine;

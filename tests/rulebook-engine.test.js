@@ -26,12 +26,16 @@ ok("math guard keeps hint", p.guard("Think about 1 block and 1 more block. How m
 mem.math = p.setMath;
 p = E.plan("3", mem);
 ok("wrong answer rule", p.rule === "N3 math: wrong answer", p.rule);
-ok("wrong guard blocks praise", /Not quite/.test(p.guard("That's correct! Great job!")));
-ok("wrong guard blocks leak", /Not quite/.test(p.guard("Not quite, the answer is 2.")));
+ok("wrong guard blocks praise", p.guard("That's correct! Great job!") === p.direct);
+ok("wrong guard blocks leak", p.guard("Not quite, the answer is 2.") === p.direct);
+ok("wrong answer reply hides the answer", !/\b2\b/.test(p.direct.replace(/1 more/g, "")), p.direct);
 ok("wrong guard keeps ok", p.guard("Not quite! Try counting your blocks again.") === "Not quite! Try counting your blocks again.");
 p = E.plan("is it 2?", mem);
 ok("correct rule", p.rule === "N3 math: correct answer", p.rule);
-ok("correct guard fixes", /Great job/.test(p.guard("Not quite, try again.")));
+ok("correct guard fixes", p.guard("Not quite, try again.") === p.direct);
+ok("correct reply shows the sum", /1 \+ 1 = 2/.test(p.direct), p.direct);
+ok("strips repeated reminder", E.stripReminder("[Rule reminder: RULE: never just give the answer.] Want to try?") === "Want to try?");
+ok("keeps normal answers", E.stripReminder("Dolphins are smart.") === "Dolphins are smart.");
 ok("correct clears", p.clearMath === true);
 
 // three wrong tries -> walkthrough
