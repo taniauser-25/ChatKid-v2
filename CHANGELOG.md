@@ -3,6 +3,11 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.3.1] - 2026-11-11
+
+### Fixed
+- ChatKid sometimes answered "Sorry — Object has already been disposed" when a question arrived while the in-browser model was still warming up. Requests to the model now wait their turn, and if the model stops working ChatKid restarts it and tries again.
+
 ## [2.3.0] - 2026-11-11
 
 ### Added

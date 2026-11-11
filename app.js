@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.3.1";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -635,7 +635,17 @@ function loadWebLLM() {
   return webllmEnginePromise;
 }
 
-async function postToWebLLM(messages, onToken) {
+// The in-browser model can only do one thing at a time. Everything that uses it waits in this line,
+// so two requests never overlap (overlapping requests break the model).
+let webllmQueue = Promise.resolve();
+
+function inWebLLMQueue(task) {
+  const run = webllmQueue.then(task, task);
+  webllmQueue = run.catch(() => {});
+  return run;
+}
+
+async function streamFromWebLLM(messages, onToken) {
   const engine = await loadWebLLM();
   // Stream the answer so words appear as soon as the model starts writing,
   // instead of waiting for the whole answer.
@@ -655,19 +665,44 @@ async function postToWebLLM(messages, onToken) {
   return cleanModelText(text);
 }
 
+async function restartWebLLM() {
+  const old = webllmEnginePromise;
+  webllmEnginePromise = null;
+  try {
+    const engine = await old;
+    await engine?.unload?.();
+  } catch (e) {}
+}
+
+function postToWebLLM(messages, onToken) {
+  return inWebLLMQueue(async () => {
+    try {
+      return await streamFromWebLLM(messages, onToken);
+    } catch (error) {
+      // The model sometimes stops working (for example, after the laptop sleeps or the tab was hidden).
+      // Start it again (it is already downloaded, so this is quick) and try one more time.
+      console.warn("ChatKid: restarting the in-browser model.", error);
+      await restartWebLLM();
+      return streamFromWebLLM(messages, onToken);
+    }
+  });
+}
+
 // Run one tiny answer right after loading, so the first real question
 // doesn't also pay the one-time GPU start-up cost.
-async function warmUpWebLLM() {
-  try {
-    const engine = await loadWebLLM();
-    await engine.chat.completions.create({
-      messages: [
-        { role: "system", content: buildSystemPrompt() },
-        { role: "user", content: "Hi" },
-      ],
-      max_tokens: 1,
-    });
-  } catch (e) {}
+function warmUpWebLLM() {
+  return inWebLLMQueue(async () => {
+    try {
+      const engine = await loadWebLLM();
+      await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: buildSystemPrompt() },
+          { role: "user", content: "Hi" },
+        ],
+        max_tokens: 1,
+      });
+    } catch (e) {}
+  });
 }
 
 async function postToOllama(messages) {
