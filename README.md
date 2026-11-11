@@ -2,14 +2,15 @@
 
 ChatKid is a research prototype of a child-centered chatbot for children aged 6â€“11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-**Current version:** 2.2.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Current version:** 2.3.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 ---
 
 ## What ChatKid does
 
 - **Child-friendly chat:** kids can type or use the microphone, pick a mood and an avatar, and tap suggested questions.
-- **Kids' RuleBook:** ChatKid follows 14 rules that children wrote in a KidsTeam co-design session (2026-11-05).
+- **Kids' RuleBook:** ChatKid follows the 16 rules that children wrote in a KidsTeam co-design session (2026-11-05).
+- **Rule engine:** `rulebook-engine.js` checks every question and every answer against the rules, without using AI, so the rules are followed even when the AI model slips.
 - **RuleBook panel:** the RuleBook button shows children the DO and DON'T rules and who can change each one.
 - **Safety check:** questions containing sensitive words (for example, weapons) trigger an "ask a grown-up" prompt before the AI answers.
 - **Child-controlled parent involvement:** the child chooses whether to notify their parents. Flagged questions are saved in the Flagged list on that device only.
@@ -30,7 +31,22 @@ ChatKid is a research prototype of a child-centered chatbot for children aged 6â
 
 The rules are stored in `KIDS_RULEBOOK` in `app.js`. Each rule keeps the children's exact words (`kidsWords`), the rule sentence shown to children (`rule`), instructions for the model (`howTo`), and who the children said can change it (`whoCanChange`).
 
-Two rules children wrote are not included yet because ChatKid can't do them: recognizing live sign language, and recognizing a child's voice versus an adult's.
+Two rules can only be followed in part. ChatKid has no camera, so for "recognize live sign language" it says honestly that it cannot see signs yet. It cannot tell a child's voice from an adult's, so it treats everyone as a kid and bleeps swear words, which is the reason the children gave for that rule.
+
+### How the rules are enforced
+
+| Rule | What the rule engine does |
+|---|---|
+| Never just give the answer | Detects math questions, gives a hint, checks the child's answer in code, and explains only after three tries. Removes the answer if the AI gives it away. |
+| Never make mistakes / never give false answers | Checks arithmetic itself. Blocks made-up weather, news, and temperatures. Gives the real date and time from the device. |
+| Never teach things parents can teach | Detects simple skills (drawing a heart, tying shoes) and points the child to a grown-up. Blocks step-by-step instructions. |
+| Never get angry or "crash out" | Refuses kindly when asked to be mean, and blocks unkind words in answers. |
+| Follow instructions exactly | Says honestly when it cannot play music, make pictures, or show videos. |
+| Make sure you understand | Asks the child to say more when a message is unclear. |
+| Bleep swear words | Replaces swear words with \*beep\* in questions and answers. |
+| Never give dangerous information / weapons | Sensitive words trigger the "ask a grown-up" prompt before the AI sees the question. |
+
+Run the tests with `node tests/rulebook-engine.test.js`.
 
 ## How it works
 
@@ -94,7 +110,7 @@ All settings are at the top of `app.js`:
 | Setting | What it does |
 |---|---|
 | `APP_VERSION` | The version shown in the footer |
-| `CONFIG.provider` | Where the AI runs: `auto` (default: `proxy` if a server address is set, otherwise `webllm`), `webllm`, `ollama`, or `proxy` |
+| `CONFIG.provider` | Where the AI runs: `auto` (default: tries the boisestate.ai server, and uses `webllm` if it does not answer), `webllm`, `ollama`, or `proxy` |
 | `CONFIG.webllm.model` | Which in-browser model to use |
 | `RESTRICTED_TERMS` | Words that trigger the "ask a grown-up" prompt |
 | `KIDS_RULEBOOK` | The children's rules |
@@ -108,6 +124,8 @@ You can also change the provider or model from the address bar, for example `?pr
 | `index.html` | Page layout |
 | `styles.css` | Visual design |
 | `app.js` | Chat logic, safety check, RuleBook, and model connection |
+| `rulebook-engine.js` | Rule checks that run before and after the AI answers |
+| `tests/rulebook-engine.test.js` | Tests for the rule engine |
 | `rulebook-icon.svg` | RuleBook icon |
 | `server/boisestate-worker.js` | Server for boisestate.ai (hosted by Boise State) |
 | `server/cloudflare-worker.js` | Alternative server for Anthropic's Claude API |
@@ -118,7 +136,7 @@ You can also change the provider or model from the address bar, for example `?pr
 ChatKid uses [semantic versioning](https://semver.org/) (MAJOR.MINOR.PATCH): bug fixes raise the last number (2.0.1), new features the middle number (2.1.0), and big changes the first number (3.0.0).
 
 1. Update `APP_VERSION` in `app.js`.
-2. Update the `?v=` numbers for `styles.css` and `app.js` in `index.html`, so browsers load the new files.
+2. Update the `?v=` numbers for `styles.css`, `rulebook-engine.js`, and `app.js` in `index.html`, so browsers load the new files.
 3. Add an entry to `CHANGELOG.md`.
 4. Create a release on GitHub with a tag such as `v2.0.1`.
 

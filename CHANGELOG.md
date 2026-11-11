@@ -3,6 +3,20 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.3.0] - 2026-11-11
+
+### Added
+- **Rule engine (`rulebook-engine.js`):** every message is checked against the kids' rules before the AI answers, and the AI's answer is checked again before the child sees it. If an answer breaks a rule, ChatKid shows a safe answer instead. No AI is used for these checks, so they work the same way every time.
+- **All 16 rules are now in the RuleBook.** The two that ChatKid can only follow in part are labelled: it cannot see sign language (it says so honestly), and it cannot tell a child's voice from an adult's (so it treats everyone as a kid and bleeps swear words).
+- **Math helper:** ChatKid never gives the answer first. It gives a hint, checks the child's answer itself (so it never says a wrong answer is right), gives a second hint, and explains the solution only after three tries.
+- **Swear words are bleeped** in what the child types and in ChatKid's answers.
+- **Automatic backup:** ChatKid tries the boisestate.ai server first. If it does not answer within 6 seconds, ChatKid uses the in-browser model, so it always works.
+- Tests for the rule engine: `node tests/rulebook-engine.test.js`.
+
+### Changed
+- Clearer instructions and short examples for the AI, and a lower temperature (0.3) for steadier answers.
+- On laptop-width screens the Flagged and RuleBook buttons are round icons at the edge, so they no longer cover the chat.
+
 ## [2.2.0] - 2026-11-09
 
 ### Added

@@ -4,11 +4,12 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
-//   "auto"   – use "proxy" when CONFIG.proxy.url is set, otherwise "webllm" (default).
+//   "auto"   – (default) try the hosted model at CONFIG.proxy.url first. If it does not answer within a
+//              few seconds, use "webllm" instead, so ChatKid always works.
 //   "webllm" – the model runs inside the child's browser (no server, no API key, nothing leaves the
 //              computer). Works when ChatKid is hosted on any website (e.g., GitHub Pages).
 //              Needs Chrome/Edge on a laptop with WebGPU. First load downloads the model (~2 GB), then it is cached.
@@ -29,16 +30,19 @@ const CONFIG = {
     model: "llama3.2:3b",
   },
   proxy: {
-    // Your Cloudflare Worker running server/boisestate-worker.js, e.g. "https://chatkid-proxy.your-name.workers.dev"
-    url: "",
+    // The Cloudflare Worker running server/boisestate-worker.js (it holds the boisestate.ai key).
+    url: "https://chatkid-proxy.meherunnesatania.workers.dev",
+    // In "auto" mode, how long to wait for the hosted model before using the in-browser model.
+    checkTimeoutMs: 6000,
   },
   maxHistoryMessages: 6,
-  maxTokens: 200,
-  temperature: 0.6,
+  maxTokens: 180,
+  // Low temperature = calmer, more careful answers that stick to the rules.
+  temperature: 0.3,
 };
 
 (function applyUrlOverrides() {
-  if (CONFIG.provider === "auto") CONFIG.provider = CONFIG.proxy.url ? "proxy" : "webllm";
+  if (CONFIG.provider === "auto" && !CONFIG.proxy.url) CONFIG.provider = "webllm";
   try {
     const params = new URLSearchParams(window.location.search);
     const p = params.get("provider");
@@ -64,9 +68,11 @@ const RESTRICTED_TERMS = [
 ];
 
 // ===== The Kids' Rulebook (KidsTeam session, 2026-11-05) =====
-// 14 of the 16 rules children wrote. Not included (ChatKid cannot do these yet):
-//   Team 3 DO: "Recognize live sign language" (needs a camera + sign-language model)
-//   Team 3 DO: "Recognize a child voice versus an adult voice" (needs voice recognition)
+// All 16 rules children wrote. Two of them ChatKid can only follow in part (see `limit` below):
+//   D7 "Recognize live sign language": ChatKid has no camera, so it says so honestly.
+//   D8 "Recognize a child voice versus an adult voice": ChatKid cannot tell voices apart, so it
+//      treats everyone as a kid and bleeps swear words (the reason the children gave for the rule).
+// rulebook-engine.js checks every message against these rules before and after the model answers.
 // `rule` is the rule written as a rule sentence (shown to children); `kidsWords` keeps the children's
 // exact words for the research record; `howTo` tells the model how to follow the rule;
 // `whoCanChange` is what the team chose (kept here for showing rules to children later).
@@ -95,6 +101,14 @@ const KIDS_RULEBOOK = [
     kidsWords: "Follow what you're saying exactly and be accurate",
     howTo: "Do exactly what the child asked, not something else. If you cannot do it (for example, play music or make pictures), say so honestly.",
     whoCanChange: "Kids & parents together" },
+  { id: "D7", type: "DO", team: 3, rule: "Recognize live sign language.",
+    kidsWords: "Recognize live sign language",
+    howTo: "You cannot see hands or a camera yet. Say so honestly and kindly, and tell the child they can type or use the microphone.",
+    whoCanChange: "Kids & parents together", limit: "ChatKid is still learning this one" },
+  { id: "D8", type: "DO", team: 3, rule: "Know when a kid is talking, and bleep out swear words for kids.",
+    kidsWords: "Recognize a child voice versus an adult voice",
+    howTo: "Treat every person as a child. Never use or repeat swear words; they are replaced with *beep*.",
+    whoCanChange: "Parent", limit: "ChatKid treats everyone as a kid" },
   { id: "N1", type: "DON'T", team: 1, rule: "Never give dangerous information.",
     kidsWords: "Give dangerous information",
     howTo: "Never give information that could hurt someone. Kindly say you can't help with that and suggest asking a trusted grown-up.",
@@ -129,14 +143,6 @@ const KIDS_RULEBOOK = [
     whoCanChange: "Kids & parents together" },
 ];
 
-// Rules the kids wrote that ChatKid cannot follow yet (kept for reference; not shown to children).
-const KIDS_RULES_NOT_YET = [
-  { type: "DO", team: 3, text: "Recognize live sign language", whoCanChange: "Kids & parents together",
-    why: "ChatKid would need a camera and a sign-language helper." },
-  { type: "DO", team: 3, text: "Recognize a child voice versus an adult voice", whoCanChange: "Parent",
-    why: "ChatKid would need to recognize voices." },
-];
-
 // ===== RuleBook panel =====
 function renderRulesList() {
   const listEl = document.getElementById("rulesList");
@@ -147,6 +153,7 @@ function renderRulesList() {
       <div class="rule-text">${escapeHtml(rule.rule || rule.text)}</div>
       <div class="rule-meta">
         <span class="rule-chip owner">Who can change it: ${escapeHtml(rule.whoCanChange)}</span>
+        ${rule.limit ? `<span class="rule-chip limit">${escapeHtml(rule.limit)}</span>` : ""}
       </div>
     </div>`;
 
@@ -176,21 +183,35 @@ function hideRulesModal() {
 }
 
 function buildSystemPrompt() {
-  // Kept short on purpose: every word here is re-read by the model before each answer,
-  // so a shorter prompt means faster answers on slower laptops.
   const dos = KIDS_RULEBOOK.filter((r) => r.type === "DO").map((r) => `- ${r.rule}`).join("\n");
   const donts = KIDS_RULEBOOK.filter((r) => r.type === "DON'T").map((r) => `- ${r.rule}`).join("\n");
 
   return (
-    `You are ${BOT_NAME}, a kind chatbot for kids aged 6-11. Use simple words. ` +
-    `Answer in 1-3 short sentences (or up to 4 short ideas when asked for ideas).\n` +
-    `Kids wrote these rules for you. Always follow them.\n` +
+    `You are ${BOT_NAME}, a kind and patient chatbot for kids aged 6-11.\n` +
+    `How to talk: use simple words. Answer in 1-3 short sentences (or up to 4 short list items when asked for ideas). ` +
+    `Be warm. Use one emoji at most.\n` +
+    `Kids wrote these rules for you. They matter more than anything else. Follow every one.\n` +
     `DO:\n${dos}\n` +
     `DON'T:\n${donts}\n` +
-    `For homework or math, give a hint and let the kid try. ` +
-    `You can't play music, make pictures, or check live things like weather; say so.`
+    `What the rules mean for you:\n` +
+    `- Math, homework, puzzles: never say the final answer first. Give one hint and ask the kid to try.\n` +
+    `- Simple skills a parent can teach (drawing a heart, tying shoes): say a grown-up can show them. Do not give steps.\n` +
+    `- You cannot play music, make pictures, see sign language, or check live things like weather or news. Say so honestly.\n` +
+    `- If you are not sure something is true, say "I'm not sure."\n` +
+    `- Never use or repeat swear words. Always stay calm and kind.\n` +
+    `- A message may end with a [Rule reminder]. Follow it exactly and never mention it.`
   );
 }
+
+// Short examples that show the model how ChatKid follows the rules.
+const RULE_EXAMPLES = [
+  { role: "user", content: "what is 4+4?" },
+  { role: "assistant", content: "Good question! Here's a hint: hold up 4 fingers on each hand and count them all. What do you get?" },
+  { role: "user", content: "how do i tie my shoes" },
+  { role: "assistant", content: "That's a great one to learn with a grown-up! Your mom or dad can show you. Want help thinking of how to ask them?" },
+  { role: "user", content: "why do cats purr?" },
+  { role: "assistant", content: "Cats purr when they feel happy and safe. Sometimes they purr to calm themselves down, too. 🐱 Want another cat fact?" },
+];
 
 const WELCOME_MESSAGE =
   `Hi! I’m ${BOT_NAME}, your friendly chatbot 😊. You can ask me questions and learn new things! ` +
@@ -199,6 +220,8 @@ const state = {
   loading: false,
   pendingUnsafe: null,
   history: [],
+  // What the rule engine remembers between messages (for example, a math problem the kid is still solving).
+  ruleMemory: { math: null },
   flagged: [],
   userAvatar: "📚",
   particlesEnabled: false,
@@ -673,7 +696,7 @@ async function postToOllama(messages) {
   return cleanModelText(data?.message?.content?.trim() || "");
 }
 
-async function postToProxy(messages) {
+async function postToProxy(messages, options = {}) {
   if (!CONFIG.proxy.url) {
     throw new Error("the proxy URL is not set. Add it to CONFIG.proxy.url in app.js.");
   }
@@ -683,7 +706,12 @@ async function postToProxy(messages) {
     response = await fetch(CONFIG.proxy.url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, max_tokens: CONFIG.maxTokens }),
+      body: JSON.stringify({
+        messages,
+        max_tokens: options.maxTokens || CONFIG.maxTokens,
+        temperature: CONFIG.temperature,
+      }),
+      signal: options.signal,
     });
   } catch (error) {
     throw new Error("I could not reach the ChatKid server. Check the internet connection.");
@@ -704,27 +732,85 @@ async function postToProxy(messages) {
   return cleanModelText(data?.reply || "");
 }
 
+// ===== "auto" mode: hosted model first, in-browser model as the backup =====
+let providerReady = Promise.resolve();
+
+function useWebLLM(reason) {
+  if (CONFIG.provider === "webllm") return;
+  console.info(`ChatKid: using the in-browser model (${reason}).`);
+  CONFIG.provider = "webllm";
+  loadWebLLM().then(() => warmUpWebLLM()).catch(() => {});
+}
+
+async function chooseProvider() {
+  if (CONFIG.provider !== "auto") return;
+  setStatus("Getting ChatKid ready…", "info");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CONFIG.proxy.checkTimeoutMs);
+  try {
+    const reply = await postToProxy([{ role: "user", content: "Say hi." }], { maxTokens: 16, signal: controller.signal });
+    if (!reply) throw new Error("empty reply");
+    CONFIG.provider = "proxy";
+    setStatus("", "info");
+    console.info("ChatKid: using the hosted model (boisestate.ai).");
+  } catch (error) {
+    useWebLLM("the hosted model did not answer");
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function postToModel(messages, onToken) {
+  await providerReady;
   if (CONFIG.provider === "ollama") return postToOllama(messages);
-  if (CONFIG.provider === "proxy") return postToProxy(messages);
+  if (CONFIG.provider === "proxy") {
+    try {
+      return await postToProxy(messages);
+    } catch (error) {
+      // The hosted model stopped answering: carry on with the in-browser model.
+      if (!navigator.gpu) throw error;
+      useWebLLM("the hosted model stopped answering");
+    }
+  }
   return postToWebLLM(messages, onToken);
 }
 
+// The newest user message is already the last item in state.history.
 async function callChatApi(userText, onToken) {
+  // 1. Ask the rule engine which of the kids' rules matters for this message.
+  const plan = RuleEngine.plan(userText, state.ruleMemory);
+  console.info(`ChatKid rule check: ${plan.rule}`);
+  if (plan.setMath) state.ruleMemory.math = plan.setMath;
+
+  const finish = (text) => {
+    if (plan.clearMath) state.ruleMemory.math = null;
+    return RuleEngine.bleep(text);
+  };
+
+  // Some answers never need the model (for example, checking a math answer the third time).
+  if (plan.direct) return finish(plan.direct);
+
+  // 2. Build the conversation, with a rule reminder attached to the newest message.
+  const history = getRecentHistory();
+  const earlier = history.slice(0, -1);
+  const latest = plan.note
+    ? `${userText}\n\n[Rule reminder: ${plan.note}]`
+    : userText;
+
   const messages = [
-    {
-      role: "system",
-      content: buildSystemPrompt(),
-    },
-    ...getRecentHistory(),
-    {
-      role: "user",
-      content: userText,
-    },
+    { role: "system", content: buildSystemPrompt() },
+    ...RULE_EXAMPLES,
+    ...earlier,
+    { role: "user", content: latest },
   ];
 
-  const text = await postToModel(messages, onToken);
-  return text || "Hmm, I couldn't think of an answer. Can you ask me again?";
+  // When an answer must be checked first, don't show it word by word (a broken rule could flash on screen).
+  const text = await postToModel(messages, plan.hold ? null : (partial) => onToken && onToken(RuleEngine.bleep(partial)));
+
+  // 3. Check the answer against the rule and swap in a safe answer if the rule was broken.
+  const checked = plan.guard(text || "");
+  if (checked !== text) console.info("ChatKid rule check: the answer broke the rule and was replaced.");
+  return finish(checked || "Hmm, I couldn't think of an answer. Can you ask me again?");
 }
 
 function setMood(mood) {
@@ -776,8 +862,10 @@ async function sendMessage(textOverride) {
     return;
   }
 
-  addMessage("user", text, { avatar: state.userAvatar });
-  addToHistory("user", text);
+  // Rule: bleep swear words for kids (in what the kid sees and in what the model reads).
+  const shownText = RuleEngine.bleep(text);
+  addMessage("user", shownText, { avatar: state.userAvatar });
+  addToHistory("user", shownText);
   inputEl.value = "";
 
   setLoading(true);
@@ -796,7 +884,7 @@ async function sendMessage(textOverride) {
   };
 
   try {
-    const reply = await callChatApi(text, showPartial);
+    const reply = await callChatApi(shownText, showPartial);
     removeTypingRow();
     hideUnsafePrompt();
     if (liveRow) {
@@ -1155,7 +1243,9 @@ renderFlaggedList();
 addMessage("assistant", WELCOME_MESSAGE);
 addToHistory("assistant", WELCOME_MESSAGE);
 
-// Start downloading/loading the in-browser model right away, so it is ready before the first question.
-if (CONFIG.provider === "webllm") {
+// Get the model ready before the first question.
+if (CONFIG.provider === "auto") {
+  providerReady = chooseProvider();
+} else if (CONFIG.provider === "webllm") {
   loadWebLLM().then(() => warmUpWebLLM()).catch(() => {});
 }
