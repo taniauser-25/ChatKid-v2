@@ -1086,6 +1086,31 @@ body[data-mood="confused"] {
   gap: 6px;
 }
 
+.rule-label {
+  display: inline-block;
+  min-width: 52px;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+  color: #fff;
+  background: var(--boise-blue);
+  vertical-align: 1px;
+}
+
+.rule-label.dont {
+  background: var(--boise-orange);
+}
+
+.rules-section-sub {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-left: 6px;
+}
+
 .rule-chip {
   display: inline-flex;
   align-items: center;

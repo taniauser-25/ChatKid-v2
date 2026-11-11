@@ -3,6 +3,13 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.4.0] - 2026-11-11
+
+### Changed
+- **The RuleBook now has the 12 merged rules** (6 DO, 6 DON'T) in place of the 16 original rules, with the same labels used in the parent survey and the printed session sheets (MR1D–MR6D, MR1ND–MR6ND). Each rule shows its label and who the children said can change it; when two teams chose differently, both choices are shown.
+- Each rule keeps the original team rules it came from (for example, MR2D comes from T1R2D and T3R7D), with the children's own words.
+- The rule engine's log messages use the new labels.
+
 ## [2.3.3] - 2026-11-11
 
 ### Changed

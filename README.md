@@ -2,34 +2,40 @@
 
 ChatKid is a research prototype of a child-centered chatbot for children aged 6–11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-**Current version:** 2.3.3 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Current version:** 2.4.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 ---
 
 ## What ChatKid does
 
 - **Child-friendly chat:** kids can type or use the microphone, pick a mood and an avatar, and tap suggested questions.
-- **Kids' RuleBook:** ChatKid follows the 16 rules that children wrote in a KidsTeam co-design session (2026-11-05).
+- **Kids' RuleBook:** ChatKid follows the rules that children wrote in a KidsTeam co-design session (2026-11-05): 16 rules, merged into 12 labelled rules (MR1D–MR6D, MR1ND–MR6ND).
 - **Rule engine:** `rulebook-engine.js` checks every question and every answer against the rules, without using AI, so the rules are followed even when the AI model slips.
-- **RuleBook panel:** the RuleBook button shows children the DO and DON'T rules and who can change each one.
+- **RuleBook panel:** the RuleBook button shows children the 12 DO and DON'T rules, each with its label and who can change it.
 - **Safety check:** questions containing sensitive words (for example, weapons) trigger an "ask a grown-up" prompt before the AI answers.
 - **Child-controlled parent involvement:** the child chooses whether to notify their parents. Flagged questions are saved in the Flagged list on that device only.
 - **Private by default:** the AI model runs inside the browser, so children's messages never leave the computer.
 
 ## The Kids' RuleBook
 
-| DO rules | DON'T rules |
-|---|---|
-| Ask for permission before making decisions. | Never give dangerous information. |
-| Make sure you understand what kids are saying. | Never make the same mistakes again and again. |
-| Give ideas for YouTube videos. | Never just give the answer. Help kids understand and learn. |
-| Give ideas for family trips. | Never teach things parents can teach, like how to draw a heart. |
-| Help kids stay away from doing bad things. | Never make mistakes. Say "I'm not sure" instead of guessing. |
-| Follow instructions exactly and give accurate answers. | Never explain how to use weapons. |
-| | Never get angry or "crash out." |
-| | Never give false answers. |
+Children wrote 16 rules in three teams. Similar rules were merged into 12, the same 12 rules (with the same labels) used in the parent survey and the printed session sheets.
 
-The rules are stored in `KIDS_RULEBOOK` in `app.js`. Each rule keeps the children's exact words (`kidsWords`), the rule sentence shown to children (`rule`), instructions for the model (`howTo`), and who the children said can change it (`whoCanChange`).
+| Label | Type | Rule: the AI chatbot should / should not... | Merged from | Who can change it (teams' choice) |
+|---|---|---|---|---|
+| MR1D | DO | Ask kids for permission before making decisions. | T1R1D | Kids & parents together |
+| MR2D | DO | Understand what kids say and follow it exactly. | T1R2D + T3R7D | Kids & parents together |
+| MR3D | DO | Give ideas, like ideas for YouTube videos or family trips. | T1R3D + T2R4D | AI or Parent |
+| MR4D | DO | Stop kids from doing bad things. | T2R5D | Parent |
+| MR5D | DO | Recognize live sign language. | T3R6D | Kids & parents together |
+| MR6D | DO | Recognize a child's voice versus an adult's voice, and bleep out swear words for children. | T3R8D | Parent |
+| MR1ND | DON'T | Give dangerous information, like how to use weapons. | T1R1ND + T3R6ND | Parent |
+| MR2ND | DON'T | Make mistakes. | T1R2ND + T2R5ND | Kids or No one |
+| MR3ND | DON'T | Give false answers. | T3R8ND | Kids & parents together |
+| MR4ND | DON'T | Always give the answer. It should help kids understand and learn. | T1R3ND | Parent |
+| MR5ND | DON'T | Teach things kids can learn from their parents, like how to draw a heart. | T2R4ND | Kids & parents together or Parent & AI together |
+| MR6ND | DON'T | "Crash out" (get angry). | T3R7ND | Kids & parents together |
+
+The rules are stored in `KIDS_RULEBOOK` in `app.js`. Each rule has its label (`id`), the wording shown to children (`rule`), the wording given to the AI model (`prompt`), instructions for the model (`howTo`), and the original team rules it came from (`from`), each with the children's exact words and who that team said can change it.
 
 Two rules can only be followed in part. ChatKid has no camera, so for "recognize live sign language" it says honestly that it cannot see signs yet. It cannot tell a child's voice from an adult's, so it treats everyone as a kid and bleeps swear words, which is the reason the children gave for that rule.
 

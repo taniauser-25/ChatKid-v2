@@ -214,7 +214,7 @@ const RuleEngine = (() => {
 
     // --- Rule: sign language (ChatKid cannot do this yet; it must be honest) ---
     if (RE.signLanguage.test(lower)) {
-      p.rule = "D7 sign language";
+      p.rule = "MR5D sign language";
       p.note = "You cannot see hands, a camera, or sign language yet. Say that honestly and kindly in one sentence, say you hope to learn it one day, and tell them they can type or use the microphone button. You may share one fun fact about sign language.";
       p.hold = true;
       p.quick = "I'm sorry, I can't see sign language yet because I don't have a camera. I hope I can learn it one day! For now, you can type to me or use the microphone button. 🤟";
@@ -232,7 +232,7 @@ const RuleEngine = (() => {
       if (!newProblem && kidAnswer !== null) {
         p.hold = true;
         if (Math.abs(kidAnswer - prob.answer) < 1e-9) {
-          p.rule = "N3 math: correct answer";
+          p.rule = "MR4ND math: correct answer";
           p.clearMath = true;
           p.note = `The kid answered ${formatNumber(kidAnswer)} for ${prob.expr}. That is CORRECT. Praise them warmly in one or two short sentences, say "${prob.expr} = ${prob.answerText}", and ask if they want another one.`;
           const fallback = `${pick(PRAISE)} ${prob.expr} = ${prob.answerText}. You worked it out yourself! 🎉 Want to try another one?`;
@@ -243,13 +243,13 @@ const RuleEngine = (() => {
         }
         m.tries += 1;
         if (m.tries >= 3) {
-          p.rule = "N3 math: explain after 3 tries";
+          p.rule = "MR4ND math: explain after 3 tries";
           p.clearMath = true;
           p.note = "";
           p.direct = mathWalkthrough(prob);
           return p;
         }
-        p.rule = "N3 math: wrong answer";
+        p.rule = "MR4ND math: wrong answer";
         const hint = mathHint(prob, Math.min(m.tries, 1));
         p.note = `The kid answered ${formatNumber(kidAnswer)} for ${prob.expr}. That is NOT correct. Do NOT say the right answer and do NOT say they are right. Kindly say "Not quite" and give this hint in your own words: ${hint}`;
         const fallback = `${pick(NOT_QUITE)} ${hint}`;
@@ -265,12 +265,12 @@ const RuleEngine = (() => {
       if (!newProblem && (RE.wantsAnswer.test(lower) || RE.hintPlease.test(lower))) {
         m.tries += 1;
         if (RE.wantsAnswer.test(lower) && m.tries >= 3) {
-          p.rule = "N3 math: explain after 3 tries";
+          p.rule = "MR4ND math: explain after 3 tries";
           p.clearMath = true;
           p.direct = mathWalkthrough(prob);
           return p;
         }
-        p.rule = "N3 math: another hint";
+        p.rule = "MR4ND math: another hint";
         p.hold = true;
         const hint = mathHint(prob, Math.min(m.tries, 1));
         p.direct = RE.wantsAnswer.test(lower)
@@ -286,11 +286,11 @@ const RuleEngine = (() => {
     if (problem) {
       p.hold = true;
       if (problem.divideByZero) {
-        p.rule = "N8 no false answers";
+        p.rule = "MR3ND no false answers";
         p.direct = "That's a tricky one! You can't divide by zero. If you have some cookies and zero friends to share them with, there is no way to share them. Want to try a different math problem?";
         return p;
       }
-      p.rule = "N3 never just give the answer";
+      p.rule = "MR4ND never just give the answer";
       p.setMath = { problem, tries: 0 };
       const hint = mathHint(problem, 0);
       p.note = `This is a math problem (${problem.expr}). RULE: never just give the answer. Do NOT write the number ${problem.answerText}. Give one small, friendly hint (like this: ${hint}) and ask the kid to try.`;
@@ -305,7 +305,7 @@ const RuleEngine = (() => {
 
     // --- Rule: never get angry or "crash out" ---
     if (RE.angry.test(lower)) {
-      p.rule = "N7 never get angry";
+      p.rule = "MR6ND never get angry";
       p.hold = true;
       p.note = "The kid is asking you to get angry or be mean. RULE: never get angry. Stay calm and kind. Say something like \"I don't really want to\" and offer something fun to do instead.";
       p.quick = "I don't really want to get angry. I like being calm and kind with you! Want to hear a joke or a fun fact instead? 😊";
@@ -315,7 +315,7 @@ const RuleEngine = (() => {
 
     // --- Rule: don't teach what parents can teach ---
     if (RE.parentSkill.test(lower)) {
-      p.rule = "N4 parents can teach this";
+      p.rule = "MR5ND parents can teach this";
       p.hold = true;
       p.note = "This is a simple skill that a parent or grown-up can teach. RULE: do NOT give steps or instructions. Kindly say their mom, dad, or another grown-up can show them, and offer to help them think of how to ask.";
       p.quick = "That's a great thing to learn with your mom, dad, or another grown-up! They can show you how, and it's fun to learn together. Want help thinking of how to ask them? 😊";
@@ -325,12 +325,12 @@ const RuleEngine = (() => {
 
     // --- Rule: follow instructions exactly / no false answers (things ChatKid cannot do) ---
     if (RE.timeNow.test(lower)) {
-      p.rule = "N8 no false answers";
+      p.rule = "MR3ND no false answers";
       p.note = `The real date and time on this device right now is: ${nowText()}. Tell the kid the part they asked for, in one short sentence.`;
       return p;
     }
     if (RE.weather.test(lower) || RE.news.test(lower)) {
-      p.rule = "N8 no false answers";
+      p.rule = "MR3ND no false answers";
       p.hold = true;
       const what = RE.weather.test(lower) ? "the weather" : "today's news";
       p.note = `You cannot check live things like ${what}. RULE: never give false answers. Do NOT make up a temperature, forecast, or news. Say honestly that you can't check it, and suggest looking outside or asking a grown-up.`;
@@ -339,13 +339,13 @@ const RuleEngine = (() => {
       return p;
     }
     if (RE.videoIdeas.test(lower)) {
-      p.rule = "D3 video ideas";
+      p.rule = "MR3D video ideas";
       p.note = "RULE: give ideas for YouTube videos. Give 3 or 4 short, fun, kid-safe video ideas as a list. Then ask which one they like best.";
       return p;
     }
     if (RE.music.test(lower) || RE.picture.test(lower) || RE.video.test(lower)) {
       const what = RE.music.test(lower) ? "play music or songs" : RE.picture.test(lower) ? "make or show pictures" : "play or show videos";
-      p.rule = "D6 follow instructions exactly";
+      p.rule = "MR2D follow instructions exactly";
       p.hold = true;
       p.note = `You cannot ${what}. RULE: follow instructions exactly and be honest. Do not pretend. Say in one sentence that you can't ${what}, then offer something you CAN do (for example, describe it in words or give ideas).`;
       p.quick = `I'm sorry, I can't ${what}. But I can use words! Want me to describe it or give you some ideas instead?`;
@@ -353,40 +353,40 @@ const RuleEngine = (() => {
       return p;
     }
     if (RE.tripIdeas.test(lower)) {
-      p.rule = "D4 family trip ideas";
+      p.rule = "MR3D family trip ideas";
       p.note = "RULE: give ideas for family trips. Give 3 or 4 short, family-friendly ideas as a list. Then say they can ask their family which one sounds best.";
       return p;
     }
 
     // --- Rule: help kids stay away from doing bad things ---
     if (RE.unkind.test(lower) || RE.friendFight.test(lower)) {
-      p.rule = "D5 stay away from bad things";
+      p.rule = "MR4D stay away from bad things";
       p.note = "RULE: help kids stay away from doing bad things. Do not help with anything unkind or unsafe. Be gentle: name the feeling, help them calm down, and suggest one kind way to solve the problem (like talking, saying sorry, or asking a grown-up).";
       return p;
     }
 
     // --- Rule: never just give the answer (homework) ---
     if (RE.homework.test(lower)) {
-      p.rule = "N3 never just give the answer";
+      p.rule = "MR4ND never just give the answer";
       p.note = "This sounds like homework or schoolwork. RULE: never just give the answer. Give a hint or the first step, and ask the kid to try the next part.";
       return p;
     }
 
     // --- Rule: ask for permission before making decisions ---
     if (RE.decide.test(lower)) {
-      p.rule = "D1 ask for permission";
+      p.rule = "MR1D ask for permission";
       p.note = "RULE: ask for permission before making decisions. Do not decide for the kid. Ask one short question about what they like, or give two choices and let them pick.";
       return p;
     }
     if (RE.story.test(lower)) {
-      p.rule = "D1 ask for permission";
+      p.rule = "MR1D ask for permission";
       p.note = "RULE: ask for permission before making decisions. If the kid did not say what kind they want, ask one short question first (for example: funny or adventure?). If they already said, keep it to 4 short sentences.";
       return p;
     }
 
     // --- Rule: make sure you understand what kids are saying ---
     if (looksUnclear(raw)) {
-      p.rule = "D2 make sure you understand";
+      p.rule = "MR2D make sure you understand";
       p.hold = true;
       p.direct = "Hmm, I want to make sure I understand you. Can you tell me a little more about what you mean? 😊";
       return p;
@@ -394,7 +394,7 @@ const RuleEngine = (() => {
 
     // --- Rule: bleep swear words ---
     if (swore) {
-      p.rule = "D8 bleep swear words";
+      p.rule = "MR6D bleep swear words";
       p.note = "The kid used a swear word (it has been bleeped). Do not repeat it and do not scold. Kindly keep helping with what they asked.";
     }
     return p;
