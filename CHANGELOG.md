@@ -3,6 +3,14 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.3.3] - 2026-11-11
+
+### Changed
+- When ChatKid runs on the slower in-browser model, rules with a fixed answer (things a parent can teach, music and pictures, weather and news, sign language, being asked to get angry) are answered instantly by the rule engine.
+
+### Fixed
+- Math hints said "1 blocks"; they now say "1 block".
+
 ## [2.3.2] - 2026-11-11
 
 ### Changed

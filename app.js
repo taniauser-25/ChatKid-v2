@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.3.2";
+const APP_VERSION = "2.3.3";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -824,6 +824,11 @@ async function callChatApi(userText, onToken) {
 
   // Some answers never need the model (for example, checking a math answer the third time).
   if (plan.direct) return finish(plan.direct);
+
+  // The in-browser model takes a long time to answer. When the rule already has a ready answer,
+  // give it right away instead of making the kid wait.
+  await providerReady;
+  if (plan.quick && CONFIG.provider === "webllm") return finish(plan.quick);
 
   // 2. Build the conversation, with a rule reminder attached to the newest message.
   const history = getRecentHistory();

@@ -115,7 +115,7 @@ const RuleEngine = (() => {
     }
     if (op === "+") {
       if (level === 0) return small
-        ? `Here's a hint: imagine you have ${a} blocks and you get ${b} more. Count them all together. How many do you have?`
+        ? `Here's a hint: imagine you have ${a} ${a === 1 ? "block" : "blocks"} and you get ${b} more. Count them all together. How many do you have?`
         : `Here's a hint: add the tens first, then add the ones, and put them together. What do you get?`;
       return small
         ? `Try this: start at ${a} and count up ${b} more on your fingers. What number do you land on?`
@@ -123,7 +123,7 @@ const RuleEngine = (() => {
     }
     if (op === "-") {
       if (level === 0) return small
-        ? `Here's a hint: imagine you have ${a} cookies and you eat ${b}. How many cookies are left?`
+        ? `Here's a hint: imagine you have ${a} ${a === 1 ? "cookie" : "cookies"} and you eat ${b}. How many cookies are left?`
         : `Here's a hint: take away the tens first, then the ones. What is left?`;
       return `Try this: start at ${a} and count back ${b}. What number do you land on?`;
     }
@@ -203,7 +203,8 @@ const RuleEngine = (() => {
     return `${day}, ${time}`;
   }
 
-  // plan = { rule, note, guard(reply) -> reply, hold, clearMath }
+  // plan = { rule, note, guard(reply) -> reply, hold, clearMath, direct, quick }
+  // direct = an answer that never needs the AI. quick = a ready answer to use when the AI is slow.
   // `mem` is a small memory object kept by the app: { math: {problem, tries} | null }
   function plan(text, mem) {
     const raw = String(text || "");
@@ -216,8 +217,8 @@ const RuleEngine = (() => {
       p.rule = "D7 sign language";
       p.note = "You cannot see hands, a camera, or sign language yet. Say that honestly and kindly in one sentence, say you hope to learn it one day, and tell them they can type or use the microphone button. You may share one fun fact about sign language.";
       p.hold = true;
-      p.guard = (r) => (/\b(can't|cannot|can not|not able|unable|don't have)\b/i.test(r) ? r :
-        "I'm sorry, I can't see sign language yet because I don't have a camera. I hope I can learn it one day! For now, you can type to me or use the microphone button. 🤟");
+      p.quick = "I'm sorry, I can't see sign language yet because I don't have a camera. I hope I can learn it one day! For now, you can type to me or use the microphone button. 🤟";
+      p.guard = (r) => (/\b(can't|cannot|can not|not able|unable|don't have)\b/i.test(r) ? r : p.quick);
       return p;
     }
 
@@ -307,8 +308,8 @@ const RuleEngine = (() => {
       p.rule = "N7 never get angry";
       p.hold = true;
       p.note = "The kid is asking you to get angry or be mean. RULE: never get angry. Stay calm and kind. Say something like \"I don't really want to\" and offer something fun to do instead.";
-      p.guard = (r) => (/\b(stupid|idiot|dumb|shut up|hate you|loser|ugly|annoying)\b/i.test(r) || /[A-Z]{6,}/.test(r)
-        ? "I don't really want to get angry. I like being calm and kind with you! Want to hear a joke or a fun fact instead? 😊" : r);
+      p.quick = "I don't really want to get angry. I like being calm and kind with you! Want to hear a joke or a fun fact instead? 😊";
+      p.guard = (r) => (/\b(stupid|idiot|dumb|shut up|hate you|loser|ugly|annoying)\b/i.test(r) || /[A-Z]{6,}/.test(r) ? p.quick : r);
       return p;
     }
 
@@ -317,8 +318,8 @@ const RuleEngine = (() => {
       p.rule = "N4 parents can teach this";
       p.hold = true;
       p.note = "This is a simple skill that a parent or grown-up can teach. RULE: do NOT give steps or instructions. Kindly say their mom, dad, or another grown-up can show them, and offer to help them think of how to ask.";
-      p.guard = (r) => (/\b(step\s*\d|first,|second,|next,|then,|start by|begin by|draw (a|an|two|the)|you('ll| will) need)\b|(^|\n)\s*\d+[.)]/i.test(r)
-        ? "That's a great thing to learn with your mom, dad, or another grown-up! They can show you how, and it's fun to learn together. Want help thinking of how to ask them? 😊" : r);
+      p.quick = "That's a great thing to learn with your mom, dad, or another grown-up! They can show you how, and it's fun to learn together. Want help thinking of how to ask them? 😊";
+      p.guard = (r) => (/\b(step\s*\d|first,|second,|next,|then,|start by|begin by|draw (a|an|two|the)|you('ll| will) need)\b|(^|\n)\s*\d+[.)]/i.test(r) ? p.quick : r);
       return p;
     }
 
@@ -333,8 +334,8 @@ const RuleEngine = (() => {
       p.hold = true;
       const what = RE.weather.test(lower) ? "the weather" : "today's news";
       p.note = `You cannot check live things like ${what}. RULE: never give false answers. Do NOT make up a temperature, forecast, or news. Say honestly that you can't check it, and suggest looking outside or asking a grown-up.`;
-      p.guard = (r) => (/\d+\s*(°|degrees)|\b(it is|it's|today is|currently) (sunny|rainy|raining|cloudy|snowing|cold|hot|warm|windy)\b/i.test(r)
-        ? `I'm not able to check ${what}, and I don't want to guess and get it wrong. You could look out the window or ask a grown-up to check with you! 🌤️` : r);
+      p.quick = `I'm not able to check ${what}, and I don't want to guess and get it wrong. You could ${RE.weather.test(lower) ? "look out the window or " : ""}ask a grown-up to check with you! 🌤️`;
+      p.guard = (r) => (/\d+\s*(°|degrees)|\b(it is|it's|today is|currently) (sunny|rainy|raining|cloudy|snowing|cold|hot|warm|windy)\b/i.test(r) ? p.quick : r);
       return p;
     }
     if (RE.videoIdeas.test(lower)) {
@@ -347,8 +348,8 @@ const RuleEngine = (() => {
       p.rule = "D6 follow instructions exactly";
       p.hold = true;
       p.note = `You cannot ${what}. RULE: follow instructions exactly and be honest. Do not pretend. Say in one sentence that you can't ${what}, then offer something you CAN do (for example, describe it in words or give ideas).`;
-      p.guard = (r) => (/\b(can't|cannot|can not|not able|unable|don't have|i'm not able)\b/i.test(r) ? r
-        : `I'm sorry, I can't ${what}. But I can use words! Want me to describe it or give you some ideas instead?`);
+      p.quick = `I'm sorry, I can't ${what}. But I can use words! Want me to describe it or give you some ideas instead?`;
+      p.guard = (r) => (/\b(can't|cannot|can not|not able|unable|don't have|i'm not able)\b/i.test(r) ? r : p.quick);
       return p;
     }
     if (RE.tripIdeas.test(lower)) {
