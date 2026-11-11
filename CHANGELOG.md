@@ -3,6 +3,11 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.4.1] - 2026-11-11
+
+### Changed
+- The RuleBook panel no longer shows the rule labels (MR1D and so on). The labels stay in the code and the rule engine's log messages.
+
 ## [2.4.0] - 2026-11-11
 
 ### Changed

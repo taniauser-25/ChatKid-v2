@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.4.1";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -158,7 +158,7 @@ function renderRulesList() {
 
   const card = (rule, kind) => `
     <div class="rule-item ${kind}">
-      <div class="rule-text"><span class="rule-label ${kind}">${escapeHtml(rule.id)}</span>${escapeHtml(rule.rule)}</div>
+      <div class="rule-text">${escapeHtml(rule.rule)}</div>
       <div class="rule-meta">
         <span class="rule-chip owner">Who can change it: ${escapeHtml(whoCanChange(rule))}</span>
         ${rule.limit ? `<span class="rule-chip limit">${escapeHtml(rule.limit)}</span>` : ""}

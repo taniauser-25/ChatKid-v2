@@ -2,7 +2,7 @@
 
 ChatKid is a research prototype of a child-centered chatbot for children aged 6–11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-**Current version:** 2.4.0 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Current version:** 2.4.1 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 ---
 
@@ -11,7 +11,7 @@ ChatKid is a research prototype of a child-centered chatbot for children aged 6�
 - **Child-friendly chat:** kids can type or use the microphone, pick a mood and an avatar, and tap suggested questions.
 - **Kids' RuleBook:** ChatKid follows the rules that children wrote in a KidsTeam co-design session (2026-11-05): 16 rules, merged into 12 labelled rules (MR1D–MR6D, MR1ND–MR6ND).
 - **Rule engine:** `rulebook-engine.js` checks every question and every answer against the rules, without using AI, so the rules are followed even when the AI model slips.
-- **RuleBook panel:** the RuleBook button shows children the 12 DO and DON'T rules, each with its label and who can change it.
+- **RuleBook panel:** the RuleBook button shows children the 12 DO and DON'T rules and who can change each one.
 - **Safety check:** questions containing sensitive words (for example, weapons) trigger an "ask a grown-up" prompt before the AI answers.
 - **Child-controlled parent involvement:** the child chooses whether to notify their parents. Flagged questions are saved in the Flagged list on that device only.
 - **Private by default:** the AI model runs inside the browser, so children's messages never leave the computer.
