@@ -3,6 +3,12 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.4.4] - 2026-11-12
+
+### Fixed
+- ChatKid could not start on computers whose graphics chip does not support "f16" (common on school and office computers with Intel UHD graphics). It now detects this and uses the "f32" version of the same model.
+- Clearer message when a computer's graphics chip cannot run the in-browser model.
+
 ## [2.4.3] - 2026-11-12
 
 ### Fixed

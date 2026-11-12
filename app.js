@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.4.3";
+const APP_VERSION = "2.4.4";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -626,6 +626,18 @@ function loadWebLLM() {
       );
     }
     setStatus("Getting ChatKid ready…", "info");
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) {
+      throw new Error(
+        "this computer's graphics chip can't run ChatKid's brain. Try Google Chrome or Microsoft Edge, or another computer."
+      );
+    }
+    // Many school and office computers (for example, Intel UHD graphics) can't use the "f16" model files.
+    // On those computers, use the "f32" version of the same model instead.
+    if (!adapter.features.has("shader-f16") && CONFIG.webllm.model.includes("q4f16_1")) {
+      CONFIG.webllm.model = CONFIG.webllm.model.replace("q4f16_1", "q4f32_1");
+      console.info(`ChatKid: this graphics chip has no f16 support, using ${CONFIG.webllm.model}.`);
+    }
     const webllm = await import(CONFIG.webllm.library);
     const engine = await webllm.CreateMLCEngine(CONFIG.webllm.model, {
       initProgressCallback: (report) => {
