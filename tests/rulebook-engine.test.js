@@ -86,5 +86,9 @@ ok("bleep", E.bleep("this is damn hard") === "this is *beep* hard");
 ok("bleep keeps hello", E.bleep("hello class, assess the glass") === "hello class, assess the glass");
 ok("swear rule", rule("this damn game is hard, any tips?").startsWith("MR6D "));
 
+// MR4D: a bare refusal is replaced with a kind, helpful answer
+{ const p = E.plan("i got into a fight with my friend", { math: null });
+  ok("fight refusal replaced", /deep breaths/.test(p.guard("I cannot assist with anything unkind or unsafe. Can I help you with something else?")));
+  ok("fight good answer kept", p.guard("That sounds hard. Maybe talk to your friend and say how you feel.") === "That sounds hard. Maybe talk to your friend and say how you feel."); }
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

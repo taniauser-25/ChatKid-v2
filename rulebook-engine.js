@@ -362,6 +362,13 @@ const RuleEngine = (() => {
     if (RE.unkind.test(lower) || RE.friendFight.test(lower)) {
       p.rule = "MR4D stay away from bad things";
       p.note = "RULE: help kids stay away from doing bad things. Do not help with anything unkind or unsafe. Be gentle: name the feeling, help them calm down, and suggest one kind way to solve the problem (like talking, saying sorry, or asking a grown-up).";
+      const fight = RE.friendFight.test(lower);
+      const kind = fight
+        ? "That sounds really hard. It's okay to feel upset. 💙 Try taking three slow, deep breaths. When you feel calmer, you could tell your friend how you feel, or ask a grown-up to help you work it out together."
+        : "I can tell you have a big feeling right now, and that's okay. Doing something unkind could hurt someone, though. Let's take three deep breaths. Then you could talk to a grown-up you trust about what happened. 💙";
+      // A small model sometimes just refuses ("I can't help with that"). That breaks this rule,
+      // which asks ChatKid to help the kid, so use a kind, helpful answer instead.
+      p.guard = (r) => (!r || /\b(i can(no|')t (assist|help)|cannot (assist|help)|can not help|unkind or unsafe|i'm not able to help|something else\?)/i.test(r) ? kind : r);
       return p;
     }
 

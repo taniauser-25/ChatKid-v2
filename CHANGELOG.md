@@ -3,6 +3,11 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.4.3] - 2026-11-12
+
+### Fixed
+- When a kid said they had a fight with a friend, the small model sometimes just refused ("I cannot assist with anything unkind"). ChatKid now replaces a bare refusal with a kind answer that helps the kid calm down and solve the problem, as the kids' rule asks.
+
 ## [2.4.2] - 2026-11-12
 
 ### Changed
