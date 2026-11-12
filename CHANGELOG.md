@@ -3,6 +3,11 @@
 All notable changes to ChatKid are listed here.
 This project follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
+## [2.4.2] - 2026-11-12
+
+### Changed
+- The in-browser model is now the small Llama 3.2 1B model (about 0.9 GB) by default, so answers come in a few seconds on most laptops. The rule engine keeps it to the kids' rules. The 3B model is still available with `?model=Llama-3.2-3B-Instruct-q4f16_1-MLC`.
+
 ## [2.4.1] - 2026-11-11
 
 ### Changed

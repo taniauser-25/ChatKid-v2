@@ -2,7 +2,7 @@
 
 ChatKid is a research prototype of a child-centered chatbot for children aged 6–11. It answers children's everyday questions in a safe, age-appropriate way, follows a **RuleBook written by children**, and asks before involving a parent when a question may need a grown-up's help.
 
-**Current version:** 2.4.1 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Current version:** 2.4.2 (shown at the bottom of the ChatKid page). See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 ---
 
@@ -77,7 +77,7 @@ ChatKid runs on any static website, such as GitHub Pages. No server, API key, or
 **Computer requirements**
 - **Google Chrome or Microsoft Edge** on a laptop or desktop (the browser needs WebGPU).
 - **The first visit downloads the AI model (about 2 GB).** Open ChatKid on each session laptop beforehand so the model is saved. Later visits load in seconds.
-- On weaker laptops, add `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC` to the address to use a smaller model (about 0.9 GB).
+- ChatKid uses the small Llama 3.2 1B model by default (about 0.9 GB), which answers in a few seconds on most laptops. On a strong laptop, add `?model=Llama-3.2-3B-Instruct-q4f16_1-MLC` to the address for better answers (about 2 GB, slower).
 
 ### Option 2: On your own computer
 
@@ -121,7 +121,7 @@ All settings are at the top of `app.js`:
 | `RESTRICTED_TERMS` | Words that trigger the "ask a grown-up" prompt |
 | `KIDS_RULEBOOK` | The children's rules |
 
-You can also change the provider or model from the address bar, for example `?provider=ollama` or `?model=Llama-3.2-1B-Instruct-q4f16_1-MLC`.
+You can also change the provider or model from the address bar, for example `?provider=ollama` or `?model=Llama-3.2-3B-Instruct-q4f16_1-MLC`.
 
 ## Project files
 

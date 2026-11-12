@@ -4,7 +4,7 @@
 //   2. Update the ?v= numbers on styles.css and app.js in index.html (so browsers load the new files).
 //   3. Add an entry to CHANGELOG.md.
 //   4. Tag the release in git: git tag -a v2.0.0 -m "ChatKid 2.0.0"
-const APP_VERSION = "2.4.1";
+const APP_VERSION = "2.4.2";
 
 // ===== Where ChatKid's "brain" runs =====
 // provider:
@@ -22,8 +22,10 @@ const CONFIG = {
   webllm: {
     library: "https://esm.run/@mlc-ai/web-llm@0.2.86",
     // 3B follows the kids' rulebook much better than 1B.
-    // Use "Llama-3.2-1B-Instruct-q4f16_1-MLC" (~0.9 GB) on weaker laptops.
-    model: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+    // The small 1B model (~0.9 GB) answers in a few seconds on most laptops. The rule engine
+    // (rulebook-engine.js) keeps it to the kids' rules. For better answers on a strong laptop,
+    // add ?model=Llama-3.2-3B-Instruct-q4f16_1-MLC to the address (~2 GB, slower).
+    model: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
   },
   ollama: {
     apiUrl: "http://127.0.0.1:11434/api/chat",
